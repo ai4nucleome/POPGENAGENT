@@ -26,10 +26,24 @@ Population-genetic inference routinely requires coordinating many specialized to
 | **Report-ready output** | Publication-quality figures and full provenance tracking |
 | **Cost-aware LLM use** | Economical models for template selection; high-capacity models for narrative reports |
 
+### Screenshots
+
+<p align="center">
+  <img src="img/POPGEN_PLAN.png" width="45%" alt="Plan generation" />
+  <img src="img/POPGEN_executeagent.png" width="45%" alt="Execute Agent" />
+</p>
+<p align="center">
+  <img src="img/POPGEN_chating.png" width="45%" alt="Chat Agent" />
+  <img src="img/POPGEN_resutlt.png" width="45%" alt="Analysis results" />
+</p>
+
+*Left: Plan generation and Execute Agent. Right: Chat Agent Q&A and analysis results.*
+
 ---
 
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Supported Analyses](#supported-analyses)
 - [Project Structure](#project-structure)
@@ -104,6 +118,7 @@ POPAGENT/
 ├── knowledge/                # RAG knowledge (Plan, Task, PubMed, tool/)
 ├── tools/                    # Tool link registry
 ├── scripts/                  # easySFS, plink2treemix, R plotting, etc.
+├── img/                      # Screenshots and figures for README
 ├── data/                     # Input data (user-provided)
 └── output/                   # Per-session outputs
 ```
@@ -247,13 +262,44 @@ results = manager.execute_TASK(datalist)
 
 ## Usage Modes
 
-| Mode | Command | Use Case |
-|------|---------|----------|
-| **CLI** | `python run.py` | Batch / scripted analyses |
-| **Web UI** | `python manage.py runserver 0.0.0.0:8000` | Interactive sessions, plan review, Chat Agent |
-| **Frontend dev** | `cd web && npm install && npm run dev` | Vue.js development |
+### 1. CLI Mode
 
-**Web UI features**: Multi-session management, plan review/edit, real-time execution, Chat Agent Q&A, Analysis Agent, file upload, API key settings.
+For batch or scripted analyses:
+
+```bash
+python run.py
+```
+
+### 2. Web UI Mode (Django backend)
+
+Start the Django server to use the interactive browser interface:
+
+```bash
+python manage.py runserver 0.0.0.0:8000
+```
+
+Then open **http://localhost:8000** in your browser.
+
+**Web UI features**:
+- Create and manage multiple analysis sessions
+- Review and modify execution plans before running
+- Real-time execution monitoring with step-by-step output
+- Interactive Q&A with the Chat Agent (literature-grounded)
+- Post-hoc Analysis Agent for demographic modeling
+- File management with drag-and-drop upload
+- Settings panel for API key configuration
+
+> **Note**: Build the frontend first (`cd web && npm install && npm run build`) if you haven't already.
+
+### 3. Frontend Dev Server (Vue.js)
+
+For Vue.js development with hot reload:
+
+```bash
+cd web
+npm install   # Required first: installs vite and dependencies
+npm run dev
+```
 
 > If you see `vite: not found`, run `npm install` in `web/` first.
 
