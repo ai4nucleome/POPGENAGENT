@@ -1,0 +1,83 @@
+# Goal: This is the obs file for the ESN, CLM, and CEU populations of the 1000 Genomes project. I hope to build a migration and separation model based on this obs file.
+# Generated from output 014
+# Successfully validated
+
+demes:
+- description: Equilibrium/root population
+  epochs:
+  - end_time: 220000
+    start_size: 7300
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Anatomically modern humans
+  epochs:
+  - end_time: 140000
+    start_size: 12300
+  name: AMH
+- ancestors:
+  - AMH
+  description: Bottleneck out-of-Africa population
+  epochs:
+  - end_time: 21200
+    start_size: 2100
+  name: OOA
+- ancestors:
+  - AMH
+  description: African ancestral population
+  epochs:
+  - end_time: 15000
+    start_size: 12300
+  name: AFR
+- ancestors:
+  - AFR
+  description: Esan in Nigeria
+  epochs:
+  - end_size: 35000
+    start_size: 12300
+  name: ESN
+- ancestors:
+  - OOA
+  description: European ancestral population
+  epochs:
+  - end_time: 12000
+    start_size: 1000
+  name: EUR
+- ancestors:
+  - EUR
+  description: Utah Residents (CEPH) with Northern and Western European Ancestry
+  epochs:
+  - end_size: 29725
+    start_size: 1000
+  name: CEU
+- ancestors:
+  - EUR
+  description: Colombians from Medellin, Colombia
+  epochs:
+  - end_size: 15000
+    start_size: 800
+  name: CLM
+description: Migration and separation model for ESN, CLM, and CEU populations from
+  1000 Genomes Project
+generation_time: 25
+migrations:
+- demes:
+  - ESN
+  - CEU
+  rate: 2.5e-05
+- demes:
+  - ESN
+  - CLM
+  rate: 4.0e-05
+- demes:
+  - CEU
+  - CLM
+  rate: 8.0e-05
+pulses:
+- dest: CLM
+  proportions:
+  - 0.15
+  sources:
+  - ESN
+  time: 500
+time_units: years

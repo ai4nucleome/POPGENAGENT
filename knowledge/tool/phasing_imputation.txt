@@ -1,0 +1,76 @@
+Phasing & Imputation Tools (SHAPEIT, Eagle, Beagle)
+=====================================================
+
+## SHAPEIT4/5 - Haplotype Phasing
+Fast and accurate phasing of genotype data.
+
+### Installation
+conda install -c bioconda shapeit4
+# Or SHAPEIT5: conda install -c bioconda shapeit5
+
+### Usage
+# Phase a VCF file
+shapeit4 --input input.vcf.gz \
+         --map genetic_map_chr{}.txt \
+         --region chr1 \
+         --output phased.vcf.gz \
+         --thread 8
+
+# SHAPEIT5 (newer, faster)
+phase_common --input input.vcf.gz \
+             --map genetic_map.txt \
+             --output phased.vcf.gz \
+             --region chr1 \
+             --thread 8
+
+---
+
+## Eagle2 - Rapid Phasing
+Reference-panel-free phasing using the positional Burrows-Wheeler transform.
+
+### Installation
+conda install -c bioconda eagle
+
+### Usage
+# Without reference panel
+eagle --bfile input --geneticMapFile genetic_map_hg38.txt.gz --outPrefix phased --numThreads 8
+
+# With reference panel
+eagle --vcfTarget target.vcf.gz \
+      --vcfRef reference.vcf.gz \
+      --geneticMapFile map.txt.gz \
+      --outPrefix phased \
+      --numThreads 8
+
+---
+
+## Beagle 5.4 - Phasing and Imputation
+Performs both haplotype phasing and genotype imputation.
+
+### Installation
+# Download JAR: https://faculty.washington.edu/browning/beagle/beagle.html
+wget https://faculty.washington.edu/browning/beagle/beagle.22Jul22.46e.jar
+
+### Phasing
+java -Xmx8g -jar beagle.jar \
+     gt=input.vcf.gz \
+     map=plink.chr1.GRCh38.map \
+     out=phased \
+     nthreads=8
+
+### Imputation (with reference panel)
+java -Xmx16g -jar beagle.jar \
+     gt=target.vcf.gz \
+     ref=reference.vcf.gz \
+     map=plink.chr1.GRCh38.map \
+     out=imputed \
+     nthreads=8
+
+### Key Parameters
+gt=           Input VCF file
+ref=          Reference panel VCF
+map=          Genetic map file
+out=          Output prefix
+nthreads=     Number of threads
+ne=           Effective population size (default: 1000000)
+window=       Window size in cM (default: 40)

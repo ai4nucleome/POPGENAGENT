@@ -1,0 +1,39 @@
+easySFS.py: Convert VCF/PLINK to Site Frequency Spectrum (SFS) for Demographic Modeling
+=======================================================================================
+
+Converts VCF files to SFS format compatible with dadi and fastsimcoal2.
+Only retains bi-allelic SNPs. Requires dadi Python package.
+
+Usage:
+  python ./scripts/easySFS.py -i <input_vcf> -p <pop_file> [options]
+
+Required:
+  -i, --input    Input VCF file (can be gzipped)
+  -p, --pops     Population file (2 cols: sample_name population)
+
+Options:
+  --proj         Projection values per population (comma-separated, e.g. '20,20,20')
+  --preview      Preview projections to choose optimal values
+  -o, --outdir   Output directory (default: output)
+  -f, --force    Force overwrite
+  --unfolded     Generate unfolded SFS (requires ancestral allele)
+  --dtype        Output format: 'dadi' or 'fastsimcoal2' (default: both)
+  --ploidy       Ploidy level (default: 2)
+
+Workflow:
+  # Step 1: Preview projections
+  python ./scripts/easySFS.py -i data.vcf.gz -p populations.txt --preview
+
+  # Step 2: Generate SFS with chosen projections
+  python ./scripts/easySFS.py -i data.vcf.gz -p populations.txt --proj 20,20,20 -o ./output/095/sfs -f
+
+Output:
+  dadi/pop1-pop2.sfs                      Joint SFS for dadi
+  fastsimcoal2/pop1_jointMAFpop1_0.obs    Joint SFS for fastsimcoal2
+  fastsimcoal2/pop1_MSFS.obs              Multidimensional SFS for fastsimcoal2
+
+Population file format (tab-separated):
+  sample1    PopA
+  sample2    PopA
+  sample3    PopB
+  sample4    PopC

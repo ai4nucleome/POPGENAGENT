@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>PopGenAgent</title>
+    <!-- <title>Genetics Agent</title> -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/left.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main-side.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/right-side.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/execute-side.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/setting.css' %}">
+
+    <link rel="icon" href="{% static 'images/logo.jpg' %}">
+</head>
+<body>
+    <div class="head">
+        <div class="head-1">
+            <img src="{% static 'images/logo.jpg' %}" alt="Session Image">
+        </div>
+        <div class="head-2">
+            <h1>PopGenAgent</h1>
+        </div>
+    </div>
+    
+    
+    
+    <div id="app" class="container">
+        <div class="left-side">
+            <div class="menu-section">
+                <div class="new-session-item" @click="createNewSession">
+                    <div class="new-session-item-div1">
+                        <img src="{% static 'images/session.png' %}" width="50%" alt="Session Image">
+                    </div>
+                    <div class="new-session-item-div2">
+                        <strong>New Session</strong>
+                    </div>
+                    
+                </div>
+                <div v-for="(id, index) in available_ids" :key="index" class="id-item" @click="changeId(id)">
+                    <div class="id-item-1"><img src="{% static 'images/menu.png' %}" width="50%" alt="Session Image"></div>
+                    <div class="id-item-3"><strong>ID:</strong></div>
+                    <div class="id-item-2"><pre v-text="id"></pre></div>
+                    <div class="id-item-3" @click.stop="confirmDelete(id)"><img src="{% static 'images/delete.png' %}" width="50%" alt="Session Image"></div>
+                    
+                    
+                    <!-- <button @click.stop="confirmDelete(id)" class="delete-button">X</button> -->
+                </div>
+            </div>                   
+            <div class="settings-section">
+                <button @click="showInputModal('API')" class="setting-button">API Setting</button>
+                <button @click="showInputModal('Model')" class="setting-button">Model Setting</button>
+                <button @click="showInputModal('Execute')" class="setting-button">Execute or not</button>
+                <button @click="manageDocs" class="setting-button">Manage Docs</button>
+                <button @click="manageTools" class="setting-button">Manage Tools</button>
+                <button @click="showUploadModal" class="setting-button">Upload Data</button>
+            </div>
+            <div v-if="isLoading" class="loading-spinner"></div>
+
+            <!-- File management modal -->
+            <div v-if="isDocModalVisible" class="doc-modal">
+                <div class="doc-content">
+                    <span class="close" @click="closeDocModal">&times;</span> <!-- Add close event -->
+                    <h2>Manage Docs</h2>
+
+                    <button @click="openNewDocModal" class="add-button">New Document</button> <!-- New document button -->
+
+                    <div class="doc-files">
+                        <ul>
+                            <!-- Iterate each page -->
+                            <li v-for="(contents, page) in docFiles" :key="page">
+                                <strong v-text="page">Page </strong>
+                                <ul>
+                                    <!-- Iterate content in each page -->
+                                    <li v-for="(content, index) in contents" :key="index">
+                                        <span v-text="content"></span>
+                                        <!-- Use arrow function or v-on:click to ensure parameters are passed -->
+                                        <button @click="() => deleteDoc(page, index)" class="delete-button">Delete</button>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- New document modal -->
+        <div v-if="isNewDocModalVisible" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeNewDocModal">&times;</span>
+                <h2>New Document</h2>
+
+                <textarea v-model="newDocContent" placeholder="Enter document content" class="modal-input-doc"></textarea>
+
+                <input v-model="newDocPage" type="number" placeholder="Enter page number" class="modal-input" />
+
+                <div class="modal-buttons">
+                    <button @click="addNewDoc">Add</button>
+                    <button @click="closeNewDocModal">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document edit modal -->
+        <div v-if="isEditingDoc" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="cancelEditDoc">&times;</span>
+                <h2>Edit Document</h2>
+                <textarea v-model="editableDocContent" class="doc-editor"></textarea>
+                <div class="edit-buttons">
+                    <button @click="saveDoc">Save</button>
+                    <button @click="cancelEditDoc">Cancel</button>
+                </div>
+            </div>
+        </div>
+                        <!-- File management modal (for tools directory) -->
+            <div v-if="isToolsModalVisible" class="modal">
+                <div class="modal-content">
+                    <span class="close" @click="closeToolsModal">&times;</span> <!-- Close button -->
+                    <h2>Manage Tools</h2>
+                    <div class="doc-files">
+                        <ul>
+                            <li v-for="file in toolsFiles" :key="file"><span v-text="file"></span>
+                                <button @click="deleteToolFile(file)">Delete</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="upload-section">
+                        <h3>Drag and Drop Files to Upload</h3>
+                        <div @drop.prevent="handleToolFileDrop" @dragover.prevent="onDragOver" class="drop-area">
+                            Drop files here
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Input modal -->
+            <div v-if="isModalVisible" class="modal">
+                <div class="modal-content">
+                    <span class="close" @click="closeModal">&times;</span>
+                    <h2>{{ modalTitle }}</h2>
+                    <input v-model="inputValue" placeholder="Enter value here" class="modal-input"/>
+                    <div class="modal-buttons">
+                        <button @click="confirmChange" class="modal-button confirm">Confirm</button>
+                        <button @click="closeModal" class="modal-button cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <!-- File upload modal -->
+            <div v-if="isUploadModalVisible" class="modal">
+                <div class="modal-content">
+                    <span class="close" @click="closeUploadModal">&times;</span>
+                    <h2>Upload Google Drive File</h2>
+                    
+                    <input type="text" v-model="googleDriveLink" placeholder="Enter Google Drive link" class="modal-input" />
+                    
+                    <div class="modal-buttons">
+                        <button @click="uploadFile" class="modal-button confirm">Upload</button>
+                        <button @click="closeUploadModal" class="modal-button cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-if="isDownloadModalVisible" class="modal">
+                <div class="modal-content">
+                    <span class="close" @click="closeDownloadModal">&times;</span>
+                    <h2>Download Status</h2>
+                    <p v-text="downloadMessage"></p>
+                    <div class="modal-buttons">
+                        <button @click="closeDownloadModal" class="modal-button cancel">Close</button>
+                    </div>
+                </div>
+            </div>
+            
+            
+        </div>
+        <div class="main-side">
+            <div class="tab-headers">
+                <div class="table-content">
+                    <div class="tab" 
+                        :class="{ 'active-tab': selectedOption === 'dialog' }" 
+                        @click="selectTab('dialog')" @change="updateFields">Chat Agent</div>
+                    <div class="tab" 
+                        :class="{ 'active-tab': selectedOption === 'execute' }" 
+                        @click="selectTab('execute')" @change="updateFields">Execute Agent</div>
+                    <div class="tab" 
+                        :class="{ 'active-tab': selectedOption === 'analysis' }" 
+                        @click="selectTab('analysis')" @change="updateFields">Analysis Agent</div>
+                </div>
+            </div>
+            <div class="bottom-section">
+                <div class="execute-side" v-if="selectedOption === 'execute'|| selectedOption === 'dialog'">
+                        <div class="plan-block">
+                            <h2>PLAN</h2>
+                            <button v-if="!isEditingPlan" @click="editPlan">EDIT PLAN</button>
+                            <div v-if="isEditingPlan" class="isEditingPlan">
+                                <textarea v-model="editablePlan" class="plan-editor"></textarea>
+                                <div class="edit-buttons">
+                                    <button @click="savePlan">Save</button>
+                                    <button @click="cancelEdit">Cancel</button>
+                                </div>
+                                
+                            </div>
+                            <div v-else>
+                                <div v-for="step in plan.plan" :key="step.step_number" class="step">
+                                    <div class="step-number">Step <span v-text="step.step_number"></span>:</div>
+                                    <div class="step-description"><strong>Description:</strong> <span v-text="step.description"></span></div>
+                                    <div class="step-files">
+                                        <div><strong>Input Files:</strong></div>
+                                        <ul>
+                                            <li v-for="file in step.input_filename" :key="file"><span v-text="file"></span></li>
+                                        </ul>
+                                    </div>
+                                    <div class="step-files">
+                                        <div><strong>Output Files:</strong></div>
+                                        <ul>
+                                            <li v-for="file in step.output_filename" :key="file"><span v-text="file"></span></li>
+                                        </ul>
+                                    </div>
+                                    <div class="step-tools">
+                                        <strong>Tools:</strong> <span v-text="step.tools"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="steps-block">
+                            <h2>Current Step</h2>
+                            <button v-if="!isEditingStep" @click="editStep">EDIT STEP</button>
+                            <div v-if="isEditingStep">
+                                <div v-for="(command, index) in editableSteps" :key="index" class="step-editor-container">
+                                    <textarea v-model="command.content" class="step-editor"></textarea>
+                                </div>
+                                <div class="edit-buttons">
+                                    <button @click="saveSteps">Save</button>
+                                    <button @click="cancelStepEdit">Cancel</button>
+                                </div>
+                            </div>
+                            <div class="steps" v-else>
+                                <div v-for="(command, index) in steps" :key="index">
+                                    <pre v-text="command"></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                </div>
+                <div class="analysis-side" v-if="selectedOption === 'analysis'">
+                    <h2>Simulation Files for ID {{ current_id }}</h2>
+                
+                    <!-- simulation.tpl edit -->
+                    <div class="file-display">
+                        <h3>simulation.tpl</h3>
+                        <textarea v-model="fileContents.tpl"></textarea>
+                        <button @click="saveFileContent('tpl')">Save</button>
+                    </div>
+                
+                    <!-- simulation.par edit -->
+                    <div class="file-display">
+                        <h3>simulation.par</h3>
+                        <textarea v-model="fileContents.par"></textarea>
+                        <button @click="saveFileContent('par')">Save</button>
+                    </div>
+                
+                    <!-- simulation.est edit -->
+                    <div class="file-display">
+                        <h3>simulation.est</h3>
+                        <textarea v-model="fileContents.est"></textarea>
+                        <button @click="saveFileContent('est')">Save</button>
+                    </div>
+                
+                    <!-- run_ana.sh edit -->
+                    <div class="file-display">
+                        <h3>run_ana.sh</h3>
+                        <textarea v-model="fileContents.run_ana"></textarea>
+                        <button @click="saveFileContent('run_ana')">Save</button>
+                    </div>
+                </div>
+                
+
+
+                    <div class="right-side">
+                        <div class="input-group dialog-agent">
+                            <label for="dialog-agent">Agent Output</label>
+                            <textarea id="dialog-agent" v-model="dialogAgent"></textarea>
+                        </div>
+                        <div class="right-side-container">
+                            <div class="input-group target-dialog" :class="{ 'flex-grow': selectedOption === 'dialog' || selectedOption === 'analysis' }">
+                                <label for="target-dialog">User Input</label>
+                                <textarea id="target-dialog" v-model="targetDialog"></textarea>
+                            </div>
+                            <div class="input-group data-path" v-if="selectedOption === 'execute'|| selectedOption === 'analysis'">
+                                <label for="data-path">Data Path (optional)</label>
+                                <textarea id="data-path" v-model="dataPath" @input="updateDataPathList"></textarea>
+                            </div>
+                        </div>
+                    
+                        <div class="button-container">
+                            <div class="buttons">
+                                <div class="buttons-left">
+                                    <button @click="stopTask">Stop Task</button>
+                                    <button @click="executePlan">Execute PLAN</button>
+                                    <button @click="sendData">Analysis</button>
+                                </div>
+                                <button onclick="sendData()">Go!</button>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="loading-container" v-if="isLoading === true">
+            <div class="spinner"></div>
+            <div class="loading-text"><h2>Excuting...</h2>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function stopTask() {
+            const payload = {
+                id: app.current_id  // Add current task ID
+            };
+            console.log('Stopping task:', payload);
+            fetch('/stop_plan/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Task stopped successfully');
+                } else {
+                    console.error('Error:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function sendData() {
+            app.isLoading = true;
+            const payload = {
+                mode: app.selectedOption,
+                targetDialog: app.targetDialog,
+                dataPath: app.dataPathList,
+                id: app.current_id  // Add current ID to payload
+            };
+            console.log('Sending data:', payload);
+            fetch('/runagent/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                app.isLoading = false;
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success' && data.interpretation) {
+                    app.typeText(data.interpretation);
+                } else {
+                    console.error('Error:', data.message);
+                }
+            })
+            .catch(error => {
+                app.isLoading = false;
+                console.error('Error:', error);
+            });
+        }
+    
+        var app = new Vue({
+            el: '#app',
+            data: {
+                plan: { plan: [] },
+                steps: [],
+                dialogAgent: '',
+                targetDialog: 'I hope to add a PCA analysis to the original PLAN. Please keep other step unchanged and add a step in PLAN. Keep the original JSON format.',
+                dataPath:'./data/20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr22.filtered.SNV_INDEL_SV_phased_panel.vcf.gz.tbi: Tabix index file for chromosome 22, containing filtered SNV, INDEL, and SV data.\n./data/samples.info: The first column is the name of the sample, the second column is the ethnicity of the sample, and the third column is the gender, with 1,2 representing male and female',
+                dataPathList: [],
+                selectedOption: 'dialog',
+                isLoading: false,
+                api_key: '',
+                base_url: '',
+                executor: false,
+                current_id: '001',
+                available_ids: [],
+                isModalVisible: false,
+                modalTitle: '',
+                inputValue: '',
+                currentSetting: '',
+                isEditingPlan: false,  // Whether in edit mode
+                editablePlan: '',      // Editable PLAN content
+                editableSteps: [], // Step content in edit mode
+                isEditingStep: false, // Whether in edit mode
+                originalSteps: [], // Store original steps for comparison
+                isDocModalVisible: false,  // Doc folder management window
+                isToolsModalVisible: false,  // Tools folder management window
+                docFiles: [],  // Doc folder file list
+                toolsFiles: [],  // Tools folder file list
+                isLoading: false,  // Loading animation state
+                isDocModalVisible: false,
+                isEditingDoc: false,
+                isNewDocModalVisible: false, // Control new document modal visibility
+                currentPage: null,
+                currentDocIndex: null,
+                editableDocContent: '',
+                newDocContent: '', // New document content
+                newDocPage: '', // New document page number
+                googleDriveLink: '',  // Google Drive link input value
+                isUploadModalVisible: false,  // Upload modal visibility state
+                isDownloadModalVisible: false,
+                downloadMessage: '',  // Store popup message
+                fileContents: {
+                    tpl: '',
+                    par: '',
+                    est: '',
+                    run_ana: ''
+                }
+            },
+            mounted() {
+                this.basesetting();
+                this.fetchData();
+                this.fetchAvailableIds();
+                this.fetchSteps();  // Initialize step content
+                setInterval(this.fetchData, 5000);  // Update data every 5 seconds
+                setInterval(this.fetchAvailableIds, 10000);  // Update available IDs every 10 seconds
+                this.fetchFileContents();
+            },
+            watch: {
+                // When current_id changes, auto-call fetchFileContents to update file content
+                current_id(newId) {
+                    this.fetchFileContents();
+                }
+            },
+            methods: {
+                fetchAvailableIds() {
+                    fetch('/get_all_ids/')
+                        .then(response => response.json())
+                        .then(data => {
+                            this.available_ids = data.ids;
+                        });
+                },
+
+                selectTab(tab) {
+                    this.selectedOption = tab;
+                },
+                updateFields() {
+                    if (this.selectedOption === 'execute') {
+                        this.targetDialog = 'Perform a focused population genetic analysis on a single chromosome, utilizing high-coverage phased VCF data from the 1000 Genomes Project to assess genetic diversity and allele frequency within and across populations.';
+                        this.dataPath = './data/20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr22.filtered.SNV_INDEL_SV_phased_panel.vcf.gz.tbi: Tabix index file for chromosome 22, containing filtered SNV, INDEL, and SV data.\n./data/samples.info: The first column is the name of the sample, the second column is the ethnicity of the sample, and the third column is the gender, with 1,2 representing male and female';
+                        this.updateDataPathList();
+                    } else if (this.selectedOption === 'analysis') {
+                        this.targetDialog = 'Please construct a dadi model based on the current data for population genetic analysis.';
+                        this.dataPath = './data/20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr22.filtered.SNV_INDEL_SV_phased_panel.vcf.gz.tbi: Tabix index file for chromosome 22, containing filtered SNV, INDEL, and SV data.\n./data/samples.info: The first column is the name of the sample, the second column is the ethnicity of the sample, and the third column is the gender, with 1,2 representing male and female';
+                        this.updateDataPathList();
+                    } else {
+                        this.targetDialog = 'I hope to add a PCA analysis to the original PLAN. Please keep other step unchanged and add a step in PLAN. Keep the original JSON format.';
+                        this.dataPath = '';
+                        this.updateDataPathList();
+                    }
+                },
+
+                typeText(text) {
+                    this.dialogAgent = '';
+                    let index = 0;
+                    const interval = setInterval(() => {
+                        if (index < text.length) {
+                            this.dialogAgent += text[index++];
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 5);
+                },
+                createNewSession() {
+                    const existingIds = this.available_ids.map(id => parseInt(id));
+                    let new_id = 1;
+                    while (existingIds.includes(new_id)) new_id++;
+                    const formattedNewId = new_id.toString().padStart(3, '0');
+    
+                    fetch('/create_new_plan/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: formattedNewId })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok ' + response.statusText);
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            this.available_ids.push(formattedNewId);
+                            this.changeId(formattedNewId);
+                        } else {
+                            console.error('Error:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                fetchFileContents() {
+                    fetch(`/get_file_content/?id=${this.current_id}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                this.fileContents = data.contents;
+                            } else {
+                                console.error('Error fetching file content:', data.message);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                },
+                saveFileContent(fileType) {
+                    const payload = {
+                        id: this.current_id,
+                        fileType: fileType,
+                        content: this.fileContents[fileType]
+                    };
+            
+                    fetch('/save_file_content/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(`${fileType} content saved successfully.`);
+                        } else {
+                            console.error('Error saving file content:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                changeId(new_id) {
+                    this.current_id = new_id;
+                    this.fetchData();
+                },
+                fetchData() {
+                    fetch(`/get_plan_data/?id=${this.current_id}`)
+                        .then(response => response.json())
+                        .then(data => { this.plan = data; });
+    
+                    fetch(`/get_step_data/?id=${this.current_id}`)
+                        .then(response => response.json())
+                        .then(data => { this.steps = data.steps; });
+                },
+                basesetting() {
+                    fetch('/get_initial_settings/')
+                        .then(response => response.json())
+                        .then(data => {
+                            this.api_key = data.api_key || '';
+                            this.base_url = data.base_url || '';
+                            this.executor = data.executor || false;
+                        });
+                },
+                confirmDelete(id) {
+                    if (confirm(`Are you sure you want to delete all plan and step files with ID ${id}?`)) {
+                        this.deleteId(id);
+                    }
+                },
+                deleteId(id) {
+                    fetch('/delete_plan_and_steps/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: id })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok ' + response.statusText);
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            this.available_ids = this.available_ids.filter(item => item !== id);
+                            if (this.current_id === id) {
+                                this.current_id = this.available_ids[0] || '001';
+                                this.fetchData();
+                            }
+                        } else {
+                            console.error('Error:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                showInputModal(setting) {
+                    this.isModalVisible = true;
+                    this.currentSetting = setting;
+                    this.inputValue = '';
+                    switch (setting) {
+                        case 'API':
+                            this.modalTitle = 'Enter API Key';
+                            break;
+                        case 'Model':
+                            this.modalTitle = 'Enter Base URL';
+                            break;
+                        case 'Execute':
+                            this.modalTitle = 'Set Execute Mode (true/false)';
+                            this.inputValue = this.executor.toString();
+                            break;
+                    }
+                },
+                closeModal() {
+                    this.isModalVisible = false;
+                    this.inputValue = '';
+                },
+                confirmChange() {
+                    switch (this.currentSetting) {
+                        case 'API':
+                            this.api_key = this.inputValue;
+                            break;
+                        case 'Model':
+                            this.base_url = this.inputValue;
+                            break;
+                        case 'Execute':
+                            this.executor = this.inputValue.toLowerCase() === 'true';
+                            break;
+                    }
+                    this.closeModal();
+                    this.updateSettings();
+                },
+
+
+                startDownload() {
+                    console.log("Starting download with link:", this.googleDriveLink);  // Debug log
+                    const payload = { link: this.googleDriveLink };
+                    
+                    // Show popup and prompt start download
+                    this.isDownloadModalVisible = true;
+                    this.downloadMessage = 'Validating link...';
+            
+                    fetch('/upload_file_from_google_drive/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Handle different states
+                        if (data.status === 'error') {
+                            this.downloadMessage = data.message;
+                        } else if (data.status === 'info') {
+                            this.downloadMessage = 'Starting download...';
+                            this.pollDownloadStatus(); // Call polling function to monitor download status
+                        } else if (data.status === 'success') {
+                            this.downloadMessage = 'Download complete!';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.downloadMessage = 'An error occurred. Please try again.';
+                    });
+                },
+            
+                pollDownloadStatus() {
+                    const checkStatus = setInterval(() => {
+                        fetch('/check_download_status/')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    this.downloadMessage = 'Download complete!';
+                                    clearInterval(checkStatus); // Stop polling
+                                } else if (data.status === 'error') {
+                                    this.downloadMessage = data.message;
+                                    clearInterval(checkStatus); // Stop polling
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                this.downloadMessage = 'An error occurred while checking status.';
+                                clearInterval(checkStatus); // Stop polling
+                            });
+                    }, 2000); // Poll status every 2 seconds
+                },
+            
+                closeDownloadModal() {
+                    this.isDownloadModalVisible = false;
+                    this.downloadMessage = '';
+                },
+                updateSettings() {
+                    const payload = {
+                        api_key: this.api_key,
+                        base_url: this.base_url,
+                        executor: this.executor
+                    };
+    
+                    fetch('/update_settings/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok ' + response.statusText);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Settings updated successfully:', data);
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                showUploadModal() {
+                    this.isUploadModalVisible = true;
+                },
+                closeUploadModal() {
+                    this.isUploadModalVisible = false;
+                    this.googleDriveLink = '';  // Clear input field
+                },
+                uploadFile() {
+                    console.log("Uploading file with link:", this.googleDriveLink);  // Debug log
+                    console.log("Current ID:", this.current_id);  // Debug log
+            
+                    const payload = { link: this.googleDriveLink, id: this.current_id };
+            
+                    fetch('/upload_file/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('File uploaded successfully');
+                            this.closeUploadModal();  // Close modal after successful upload
+                        } else {
+                            console.error('Error:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                executePlan() {
+                    const payload = {
+                        id: this.current_id,
+                        datalist: this.dataPathList,  // Pass data as needed
+                    };
+            
+                    fetch('/execute_plan/', {  // Backend route
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to execute PLAN');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            console.log('PLAN executed successfully:', data.results);
+                            // Handle returned data as needed
+                        } else {
+                            console.error('Error executing PLAN:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                editPlan() {
+                    this.isEditingPlan = true;
+                    this.editablePlan = JSON.stringify(this.plan.plan, null, 2);  // Convert PLAN to string and format
+                },
+                
+                savePlan() {
+                    try {
+                        const parsedPlan = JSON.parse(this.editablePlan);  // Parse user-modified content
+                        this.plan.plan = parsedPlan;
+                        this.isEditingPlan = false;
+                        this.updatePlan();  // Save modified PLAN to server
+                    } catch (e) {
+                        alert('Invalid JSON format. Please correct the errors.');
+                    }
+                },
+                
+                cancelEdit() {
+                    this.isEditingPlan = false;
+                    this.editablePlan = '';  // Clear edit content
+                },
+                
+                updatePlan() {
+                    fetch(`/update_plan/?id=${this.current_id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.plan.plan)  // Pass complete plan data
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to update the plan');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('Plan updated successfully.');
+                        } else {
+                            console.error('Error updating plan:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+                
+                editStep() {
+                    this.isEditingStep = true;
+                    // Create editable step copy
+                    this.editableSteps = this.steps.map(step => ({ content: step }));
+                    // Save original steps for later comparison
+                    this.originalSteps = [...this.steps];
+                },
+                cancelStepEdit() {
+                    this.isEditingStep = false;
+                    this.editableSteps = [];
+                },
+                saveSteps() {
+                    this.isEditingStep = false;
+        
+                    this.editableSteps.forEach((step, index) => {
+                        if (step.content !== this.originalSteps[index]) {
+                            // Only send request when content has changed
+                            this.updateStep(index + 1, step.content);
+                        }
+                    });
+        
+                    this.steps = this.editableSteps.map(step => step.content);
+                },
+                updateStep(stepNumber, stepContent) {
+                    const payload = {
+                        id: this.current_id,
+                        stepNumber: stepNumber,
+                        content: stepContent
+                    };
+        
+                    fetch(`/update_step/?id=${this.current_id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to update the step');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            console.log(`Step ${stepNumber} updated successfully.`);
+                        } else {
+                            console.error(`Error updating step ${stepNumber}:`, data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                },
+
+
+                // Close new document modal
+                closeNewDocModal() {
+                    this.isNewDocModalVisible = false;
+                },
+                // Add new document
+                addNewDoc() {
+                    if (!this.newDocContent || !this.newDocPage) {
+                        alert('Please enter both content and page number.');
+                        return;
+                    }
+
+                    const page = this.newDocPage;
+                    if (!this.docFiles[page]) this.docFiles[page] = [];
+                    this.docFiles[page].push(this.newDocContent);
+
+                    this.updateDocFiles(); // Update data on server
+                    this.closeNewDocModal(); // Close modal
+                },
+
+                cancelEditDoc() {
+                    this.isEditingDoc = false;
+                },
+                // Delete document
+                deleteDoc(page, index) {
+                    console.log('Delete clicked for page:', page, 'index:', index); // Confirm event is triggered
+                    if (confirm('Are you sure you want to delete this document?')) {
+                        this.docFiles[page].splice(index, 1); // Remove content
+                        if (this.docFiles[page].length === 0) {
+                            delete this.docFiles[page]; // Remove page
+                        }
+                        this.updateDocFiles(); // Update data
+                    }
+                },
+                               
+                // Update document data on server
+                updateDocFiles() {
+                    fetch('/update_doc_files/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.docFiles),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Docs updated successfully.');
+                        })
+                        .catch(error => console.error('Error updating docs:', error));
+                },
+                            // Drag-over behavior
+                onDragOver(event) {
+                    event.preventDefault();  // Prevent default behavior
+                    event.dataTransfer.dropEffect = 'copy';  // Show "copy" cursor
+                },
+                
+                
+                // Actions when opening file management window
+                manageDocs() {
+                    this.isDocModalVisible = true;
+                    this.fetchDocFiles();  // Fetch document list
+                },
+                // Actions when managing tools folder
+                manageTools() {
+                    this.isToolsModalVisible = true;
+                    this.fetchToolsFiles();  // Fetch files in tools folder
+                },
+
+                // Close tools management window
+                closeToolsModal() {
+                    this.isToolsModalVisible = false;
+                },
+
+                // Fetch tools folder file list
+                fetchToolsFiles() {
+                    fetch('/get_tools_files/')
+                        .then(response => response.json())
+                        .then(data => {
+                            this.toolsFiles = data.files;  // Update tools file list
+                        })
+                        .catch(error => console.error('Error fetching tools files:', error));
+                },
+
+                // Drag and drop tool file upload
+                handleToolFileDrop(event) {
+                    const files = event.dataTransfer.files;
+                    if (files.length === 0) {
+                        console.log('No files dropped.');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    Array.from(files).forEach(file => formData.append('file', file));
+
+                    // Send upload request to tools folder
+                    fetch('/upload_tool_file/', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            this.fetchToolsFiles();  // Refresh file list after successful upload
+                            console.log('File uploaded successfully:', data.message);
+                        } else {
+                            console.error('Error uploading file:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error uploading file:', error));
+                },
+
+                // Delete file in tools folder
+                deleteToolFile(fileName) {
+                    fetch('/delete_tool_file/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ file_name: fileName })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            this.fetchToolsFiles();  // Refresh file list after successful deletion
+                        } else {
+                            console.error('Error deleting file:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error deleting file:', error));
+                },
+                        },
+
+            
+
+        });
+    </script>
+    
+        
+</body>
+</html>

@@ -1,0 +1,179 @@
+.main-side {
+    flex: 0 0 84%; /* Limit content area width to 80% of page */
+    height: 99%;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-width: 98%; /* Limit total width to 85% of page */
+    box-sizing: border-box; /* Include padding and border in size calculation */
+    gap: 10px; /* Control vertical spacing */
+}
+
+
+
+.bottom-section {
+    flex: 1; /* Occupy remaining height */
+    display: flex;
+    flex-direction: row; /* Arrange child elements horizontally */
+    height: 90%;
+    gap: 20px; /* Spacing between left and right areas */
+}
+
+.execute-side {
+    flex: 1; /* Left section occupies remaining space */
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+    overflow-y: auto;
+    box-sizing: border-box; /* Include padding and border */
+}
+
+
+
+
+.analysis-side {
+    flex: 1; /* Left section occupies remaining space */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    max-width: 800px;
+    overflow-y: auto;
+    box-sizing: border-box; /* Include padding and border */
+    margin: auto;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-side h2 {
+    text-align: center;
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.file-display {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.file-display h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.file-display textarea {
+    width: 100%;
+    height: 150px;
+    padding: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: vertical;
+    background-color: #f7f7f7;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.file-display textarea:focus {
+    border-color: #007bff;
+    background-color: #ffffff;
+    outline: none;
+    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.2);
+}
+
+.file-display button {
+    display: inline-block;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.file-display button:hover {
+    background-color: #0056b3;
+}
+
+.right-side {
+    flex: 1; /* Right section occupies remaining space */
+    padding: 15px;
+    /* border: 2px dashed #4a90e2; */
+    background-color: #fff;
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box; /* Include padding and border */
+}
+
+.tab-headers {
+    display: flex;
+    justify-content: flex-start; /* Align tabs to the left */
+    width: 100%; /* Make tab-headers fill parent container */
+    /* background-color: #e0e7ff; */
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    box-shadow: 0 2px 2px #4a90e2; /* Add bottom shadow */
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+
+.table-content {
+    display: flex; /* Use flex to arrange tabs horizontally */
+    width: 50%; /* Limit table-content to 50% of header */
+    flex-direction: row; /* Ensure content is arranged horizontally */
+    align-items: center; /* Align vertically center */
+    justify-content: space-between; /* Distribute tabs evenly */
+}
+
+.tab {
+    flex: 1; /* Make all tabs share width equally */
+    text-align: center;
+    padding: 15px;
+    cursor: pointer;
+    background-color: #b0c4de;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    border-right: 1px solid #e0e7ff;
+}
+
+.tab:last-child {
+    border-right: none; /* Remove right border from last tab */
+}
+
+.tab:hover {
+    background-color: #90b2d8;
+    transform: scale(1.05); /* Scale up on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Add hover shadow */
+}
+
+.active-tab {
+    background-color: #4a90e2;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid white;
+}
+
+.tab:first-child {
+    border-top-left-radius: 12px;
+}
+
+.tab:last-child {
+    border-top-right-radius: 12px;
+}

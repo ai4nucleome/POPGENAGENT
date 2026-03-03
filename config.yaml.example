@@ -1,0 +1,37 @@
+# =============================================================================
+# PopGenAgent Configuration
+# =============================================================================
+# Copy this file to config.yaml and fill in your actual values.
+# config.yaml is git-ignored to protect secrets.
+
+# Default LLM settings (used by run.py, agents, etc.)
+llm:
+  api_key: "YOUR_API_KEY_HERE"
+  base_url: "https://api.openai.com/v1"
+  default_model: "gpt-4"
+  executor: true
+
+# API key pool for concurrent task allocation (used by Django backend)
+# Add multiple entries for round-robin load balancing.
+api_pool:
+  - api_key: "YOUR_POOL_KEY_1"
+    base_url: "https://api.openai.com/v1"
+    name: "pool_1"
+    max_concurrent: 3
+  - api_key: "YOUR_POOL_KEY_2"
+    base_url: "https://api.openai.com/v1"
+    name: "pool_2"
+    max_concurrent: 3
+
+# PubMed retrieval settings (used by ChatAgent)
+pubmed:
+  api_key: "YOUR_NCBI_API_KEY"
+  email: "your@email.com"
+  top_k_results: 5
+  doc_content_chars_max: 3000
+
+# Django settings
+django:
+  secret_key: "change-me-to-a-random-string"
+  debug: true
+  allowed_hosts: ["*"]

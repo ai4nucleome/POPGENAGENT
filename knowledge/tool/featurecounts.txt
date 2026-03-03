@@ -1,0 +1,54 @@
+Tool: featureCounts
+Purpose: Count reads mapped to genomic features such as genes or exons for isoform or gene expression quantification.
+Input: Sorted and indexed BAM file, GTF annotation file
+Output: Read count matrix
+Command Example: featureCounts -a annotation.gtf -o counts.txt aligned.bam
+Note: Supports long-read BAM input as long as it's properly aligned and sorted.
+
+---
+
+Tool: extract_3p_end
+Purpose: Extract the last 20 bases (3′ end) from each read in a trimmed FASTQ file without using a reference genome.
+Input: Trimmed FASTQ file
+Output: FASTA file containing 3′ end sequences
+Note: This is an internal logic operation for extracting sequence tails, not a script call.
+
+---
+
+If miRBase_mature.fasta is available, convert it to SAF format using the provided script. Command: `python ./scripts/convert_fasta_to_saf.py -i ./data/miRBase_mature.fasta -o ./data/miRBase_mature.saf`. Alternatively, the user may prepare SAF manually before running featureCounts. Required SAF fields are: GeneID, Chr, Start, End, Strand.
+
+---
+
+Tool: STAR
+Purpose: Align 3′ end-seq reads to a reference genome with high precision.
+Input: Trimmed FASTQ file and genome index
+Output: Sorted BAM file
+Command Example:
+  STAR --runThreadN 4 --genomeDir ./genome_index --readFilesIn trimmed.fastq.gz --readFilesCommand zcat --outFileNamePrefix ./output/sample --outSAMtype BAM SortedByCoordinate
+
+---
+
+Tool: bedtools genomecov
+Purpose: Generate base-level coverage profile from BAM file to infer PAS sites.
+Input: BAM file
+Output: Coverage profile
+Command Example:
+  bedtools genomecov -ibam aligned.bam -d > coverage.txt
+
+---
+
+Tool: filter_pas_peaks.py
+Purpose: Custom Python script to detect PAS peaks from coverage profile. Automatically selects regions with local maxima at 3′ ends.
+Input: Coverage profile (text)
+Output: PAS_sites.bed
+Command Example:
+  python filter_pas_peaks.py --input coverage.txt --output PAS_sites.bed
+
+---
+
+Tool: bedtools genomecov
+Purpose: Generate base-level coverage profile from BAM file to infer PAS sites.
+Input: BAM file
+Output: Coverage profile
+Command Example:
+  bedtools genomecov -ibam aligned.bam -d > coverage.txt

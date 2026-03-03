@@ -1,0 +1,26 @@
+# Sequential Divergence FastSimCoal2 Configuration
+# Generic model for populations with intermediate groups
+
+Goal: Analyze population structure with sequential divergence pattern
+
+Key Principles:
+1. First population diverges directly from ancestral
+2. Create intermediate population for remaining groups
+3. Remaining populations diverge from intermediate
+4. Time ordering: POP1 > INTERMEDIATE formation > POP2/POP3 divergence
+5. Include migration between related populations
+
+Parameter Naming Rules:
+- Use RSIZE1, RSIZE2, RSIZE3 for population size changes
+- Avoid parameter names that are subsets of each other
+- Use clear, distinct names: NPOP1, NPOP2, NPOP3, ANC0, ANC12, TDIV1, TDIV2
+
+Historical Event Structure:
+- TDIV1: First population diverges from ancestral
+- TDIV2: Intermediate population forms
+- TDIV3: Remaining populations diverge from intermediate
+
+Migration Patterns:
+- Include migration between related populations
+- Use appropriate migration rates based on population relationships
+- Consider both directions of migration

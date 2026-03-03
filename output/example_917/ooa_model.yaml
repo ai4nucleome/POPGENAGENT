@@ -1,0 +1,45 @@
+description: Out-of-Africa demographic model with YRI, CEU, CHB populations
+time_units: generations
+demes:
+  - name: ANC
+    description: Ancestral African population
+    epochs:
+      - start_size: 7300
+        end_time: 5600
+  - name: YRI
+    description: Yoruba in Ibadan, Nigeria
+    ancestors: [ANC]
+    epochs:
+      - start_size: 12300
+  - name: OOA
+    description: Out-of-Africa ancestral population
+    ancestors: [ANC]
+    epochs:
+      - start_size: 2100
+        end_time: 848
+  - name: CEU
+    description: Utah residents with Northern and Western European ancestry
+    ancestors: [OOA]
+    epochs:
+      - start_size: 1000
+        end_size: 29725
+  - name: CHB
+    description: Han Chinese in Beijing, China
+    ancestors: [OOA]
+    epochs:
+      - start_size: 510
+        end_size: 54090
+migrations:
+  - demes: [YRI, OOA]
+    rate: 2.5e-5
+    start_time: 5600
+    end_time: 848
+  - demes: [YRI, CEU]
+    rate: 2.5e-5
+    start_time: 848
+  - demes: [YRI, CHB]
+    rate: 7.8e-6
+    start_time: 848
+  - demes: [CEU, CHB]
+    rate: 9.6e-5
+    start_time: 848

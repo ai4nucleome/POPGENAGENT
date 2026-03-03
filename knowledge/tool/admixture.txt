@@ -1,0 +1,54 @@
+{
+            "step_number": 7,
+            "description": "Conduct admixture analysis by defining various numbers of populations k to simulate, ranging from k=2 to k=10 or higher. This analysis will estimate ancestry proportions for each individual and reveal patterns of admixture and population substructure across the 26 populations, helping to understand historical migration and mixing events.",
+            "input_filename": [
+                "./output/030/final_ld_pruned_1000GP.bed: final LD-pruned PLINK bed file",
+                "./output/030/final_ld_pruned_1000GP.bim: final LD-pruned PLINK bim file",
+                "./output/030/final_ld_pruned_1000GP.fam: final LD-pruned PLINK fam file"
+            ],
+            "output_filename": [
+                "./output/030/admixture_k2.Q: ancestry proportions for k=2",
+                "./output/030/admixture_k3.Q: ancestry proportions for k=3",
+                "./output/030/admixture_k4.Q: ancestry proportions for k=4",
+                "./output/030/admixture_k5.Q: ancestry proportions for k=5",
+                "./output/030/admixture_cv_error.txt: cross-validation error for each k value"
+            ],
+            "tools": "ADMIXTURE"
+        },
+
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 2 -j4 > ./output/030/admixture_k2.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 3 -j4 > ./output/030/admixture_k3.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 4 -j4 > ./output/030/admixture_k4.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 5 -j4 > ./output/030/admixture_k5.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 6 -j4 > ./output/030/admixture_k6.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 7 -j4 > ./output/030/admixture_k7.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 8 -j4 > ./output/030/admixture_k8.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 9 -j4 > ./output/030/admixture_k9.log 2>&1
+admixture --cv ./output/030/final_ld_pruned_1000GP.bed 10 -j4 > ./output/030/admixture_k10.log 2>&1
+mv final_ld_pruned_1000GP.2.Q ./output/030/admixture_k2.Q
+mv final_ld_pruned_1000GP.2.P ./output/030/admixture_k2.P
+mv final_ld_pruned_1000GP.3.Q ./output/030/admixture_k3.Q
+mv final_ld_pruned_1000GP.3.P ./output/030/admixture_k3.P
+mv final_ld_pruned_1000GP.4.Q ./output/030/admixture_k4.Q
+mv final_ld_pruned_1000GP.4.P ./output/030/admixture_k4.P
+mv final_ld_pruned_1000GP.5.Q ./output/030/admixture_k5.Q
+mv final_ld_pruned_1000GP.5.P ./output/030/admixture_k5.P
+mv final_ld_pruned_1000GP.6.Q ./output/030/admixture_k6.Q
+mv final_ld_pruned_1000GP.6.P ./output/030/admixture_k6.P
+mv final_ld_pruned_1000GP.7.Q ./output/030/admixture_k7.Q
+mv final_ld_pruned_1000GP.7.P ./output/030/admixture_k7.P
+mv final_ld_pruned_1000GP.8.Q ./output/030/admixture_k8.Q
+mv final_ld_pruned_1000GP.8.P ./output/030/admixture_k8.P
+mv final_ld_pruned_1000GP.9.Q ./output/030/admixture_k9.Q
+mv final_ld_pruned_1000GP.9.P ./output/030/admixture_k9.P
+mv final_ld_pruned_1000GP.10.Q ./output/030/admixture_k10.Q
+mv final_ld_pruned_1000GP.10.P ./output/030/admixture_k10.P
+grep 'CV error' ./output/030/admixture_k2.log | awk '{print "K=2:", $3, $4}' > ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k3.log | awk '{print "K=3:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k4.log | awk '{print "K=4:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k5.log | awk '{print "K=5:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k6.log | awk '{print "K=6:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k7.log | awk '{print "K=7:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k8.log | awk '{print "K=8:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k9.log | awk '{print "K=9:", $3, $4}' >> ./output/030/admixture_cv_error.txt
+grep 'CV error' ./output/030/admixture_k10.log | awk '{print "K=10:", $3, $4}' >> ./output/030/admixture_cv_error.txt

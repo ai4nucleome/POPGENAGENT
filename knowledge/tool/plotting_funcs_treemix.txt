@@ -1,0 +1,45 @@
+plotting_funcs.R: Official TreeMix R Plotting Functions
+=======================================================
+
+Contains functions for visualizing TreeMix results including trees, migration, and residuals.
+
+Usage:
+  source('./scripts/plotting_funcs.R')
+
+Key Functions:
+
+1. plot_tree(stem, ...)
+   Plot population tree with migration edges.
+   - stem: prefix of TreeMix output files
+   - plotmig: whether to show migration arrows (default TRUE)
+   - scale: whether to show scale bar (default TRUE)
+   - o: output file (NA = screen)
+
+2. plot_resid(stem, pop_order=NA, min=-0.009, max=0.009, ...)
+   Plot residual covariance matrix as heatmap.
+   - stem: prefix of TreeMix output files
+   - pop_order: custom population order
+
+3. get_f(stem)
+   Returns fraction of variance in relatedness matrix explained by the tree.
+
+Example workflow:
+  source('./scripts/plotting_funcs.R')
+
+  # Individual tree plots
+  for (m in 0:5) {
+    png(paste0('treemix_tree_m', m, '.png'), width=14, height=10, units='in', res=300)
+    plot_tree(paste0('./output/095/treemix_m', m))
+    dev.off()
+  }
+
+  # Residual plot
+  png('treemix_residuals.png', width=10, height=10, units='in', res=300)
+  plot_resid(paste0('./output/095/treemix_m3'))
+  dev.off()
+
+  # Model fit
+  for (m in 0:5) {
+    f <- get_f(paste0('./output/095/treemix_m', m))
+    cat(sprintf('m=%d: f = %.4f\n', m, f))
+  }

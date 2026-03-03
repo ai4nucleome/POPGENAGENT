@@ -1,0 +1,1 @@
+./fsc28 -t ./output/012/ana/simulation.tpl  -e ./output/012/ana/simulation.est      -n 100000 -N 100000 -M -L 40 -d -0 -C 10 -B 10

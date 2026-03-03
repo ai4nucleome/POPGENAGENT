@@ -1,0 +1,17 @@
+        {
+            "step_number": 1,
+            "description": "Basic filtering and preprocessing of the genotype data to remove low-quality variants, filter for minor allele frequency (MAF > 0.01), and retain only biallelic SNP sites. This step prepares the dataset for downstream population genetics analyses by ensuring data quality and removing rare variants that could introduce noise.",
+            "input_filename": [
+                "/home/agent/POPGENAGENT/data/1000GP_pruned.bed: plink bed file of 1000GP Phase 3 data with 26 populations",
+                "/home/agent/POPGENAGENT/data/1000GP_pruned.bim: plink bim file of 1000GP Phase 3 data",
+                "/home/agent/POPGENAGENT/data/1000GP_pruned.fam: plink fam file of 1000GP Phase 3 data"
+            ],
+            "output_filename": [
+                "./output/019/filtered_1000GP.bed: filtered plink bed file with high-quality biallelic SNPs",
+                "./output/019/filtered_1000GP.bim: filtered plink bim file with high-quality biallelic SNPs",
+                "./output/019/filtered_1000GP.fam: filtered plink fam file with high-quality biallelic SNPs"
+            ],
+            "tools": "PLINK"
+        },
+
+plink --bfile /home/agent/POPGENAGENT/data/1000GP_pruned --maf 0.01 --geno 0.05 --biallelic-only strict --make-bed --out ./output/009/filtered_1000GP

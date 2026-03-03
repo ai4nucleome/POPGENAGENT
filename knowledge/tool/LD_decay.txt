@@ -1,0 +1,94 @@
+  {
+            "step_number": 6,
+            "description": "Calculate linkage disequilibrium (LD) decay separately for each of the 26 populations to evaluate population-specific patterns of LD decline with genomic distance. This analysis will compute pairwise r\u00b2 values between SNPs at various distance bins and generate LD decay curves showing how LD decreases as a function of physical distance for each population.",
+            "input_filename": [
+                "./output/019/unrelated_1000GP.bed: plink bed file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.bim: plink bim file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.fam: plink fam file with unrelated individuals only"
+            ],
+            "output_filename": [
+                "./output/019/ld_decay_ACB.txt: LD decay data for ACB population",
+                "./output/019/ld_decay_ASW.txt: LD decay data for ASW population",
+                "./output/019/ld_decay_all_populations.txt: combined LD decay data for all 26 populations",
+                "./output/019/ld_decay_curves.png: LD decay curves for all 26 populations in a single plot"
+            ],
+            "tools": "PLINK, Python"
+        },
+
+
+
+for pop in ACB ASW BEB CDX CEU CHB CHS CLM ESN FIN GBR GIH GWD IBS ITU JPT KHV LWK MSL MXL PEL PJL PUR STU TSI YRI; do if [ ! -f ./output/019/ld_${pop}.ld ]; then plink --bfile ./output/019/unrelated_1000GP --keep ./output/019/samples_${pop}.txt --r2 --ld-window 99999 --ld-window-kb 1000 --ld-window-r2 0 --out ./output/019/ld_${pop}; fi; done
+
+cat << 'EOF' > ./output/019/calculate_ld_decay.py
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# Define populations
+populations = ["ACB", "ASW", "BEB", "CDX", "CEU", "CHB", "CHS", "CLM", "ESN", "FIN", 
+               "GBR", "GIH", "GWD", "IBS", "ITU", "JPT", "KHV", "LWK", "MSL", "MXL", 
+               "PEL", "PJL", "PUR", "STU", "TSI", "YRI"]
+
+# Distance bins (in kb)
+bins = [0, 5, 10, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500, 750, 1000]
+bin_labels = [f"{bins[i]}-{bins[i+1]}" for i in range(len(bins)-1)]
+
+# Process each population
+all_decay_data = []
+
+for pop in populations:
+    ld_file = f"./output/019/ld_{pop}.ld"
+    
+    if os.path.exists(ld_file):
+        # Read LD data
+        ld_df = pd.read_csv(ld_file, delim_whitespace=True)
+        
+        # Calculate distance between SNPs
+        ld_df['Distance_kb'] = abs(ld_df['BP_A'] - ld_df['BP_B']) / 1000
+        
+        # Bin the distances and calculate mean r2 for each bin
+        ld_df['Bin'] = pd.cut(ld_df['Distance_kb'], bins=bins, labels=bin_labels, include_lowest=True)
+        
+        # Calculate mean r2 for each distance bin
+        decay_data = ld_df.groupby('Bin')['R2'].agg(['mean', 'count']).reset_index()
+        decay_data['Population'] = pop
+        decay_data['Bin_midpoint'] = [(bins[i] + bins[i+1])/2 for i in range(len(bins)-1)]
+        
+        # Save individual population LD decay data
+        decay_data.to_csv(f"./output/019/ld_decay_{pop}.txt", sep='\t', index=False)
+        
+        all_decay_data.append(decay_data)
+
+# Combine all population data
+if all_decay_data:
+    combined_decay = pd.concat(all_decay_data, ignore_index=True)
+    combined_decay.to_csv("./output/019/ld_decay_all_populations.txt", sep='\t', index=False)
+    
+    # Create LD decay curves plot
+    plt.figure(figsize=(12, 8))
+    
+    # Plot each population
+    for pop in populations:
+        pop_data = combined_decay[combined_decay['Population'] == pop]
+        if not pop_data.empty:
+            plt.plot(pop_data['Bin_midpoint'], pop_data['mean'], 
+                    marker='o', markersize=4, label=pop, alpha=0.7)
+    
+    plt.xlabel('Distance (kb)', fontsize=12)
+    plt.ylabel('Mean r²', fontsize=12)
+    plt.title('LD Decay Curves for 26 Populations', fontsize=14)
+    plt.grid(True, alpha=0.3)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', ncol=2)
+    plt.xlim(0, 1000)
+    plt.ylim(0, 1)
+    plt.tight_layout()
+    plt.savefig('./output/019/ld_decay_curves.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print("LD decay analysis completed successfully!")
+else:
+    print("No LD data found for any population!")
+EOF
+
+python ./output/019/calculate_ld_decay.py

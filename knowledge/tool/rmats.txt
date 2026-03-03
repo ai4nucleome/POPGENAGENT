@@ -1,0 +1,98 @@
+To install this package run one of the following:conda install bioconda::rmats conda install bioconda/label/cf201901::rmats ,rMATS: rMATS (replicate Multivariate Analysis of Transcript Splicing) is a computational tool designed for detecting differential alternative splicing events from RNA-Seq data with biological replicates. It quantifies splicing variations by computing inclusion levels and applying a likelihood-ratio test for statistical significance. 
+
+### Supported Alternative Splicing Events:
+- **Skipped exon (SE)** - Exon skipping events.
+- **Alternative 5' splice site (A5SS)** - Variable splice site at the 5' end.
+- **Alternative 3' splice site (A3SS)** - Variable splice site at the 3' end.
+- **Mutually exclusive exons (MXE)** - Selection between two alternative exons.
+- **Retained intron (RI)** - Intron retention events.
+
+### Dependencies:
+- Python (>=3.6.12 or 2.7.15)
+- Cython (0.29.21 or 0.29.15 for Python 2)
+- numpy (>=1.16.6)
+- BLAS, LAPACK
+- GNU Scientific Library (GSL 2.5)
+- GCC (>=5.4.0)
+- gfortran (Fortran 77)
+- CMake (3.15.4)
+- PAIRADISE (optional)
+- Samtools (optional)
+- STAR (optional)
+
+### Installation & Setup:
+```bash
+# Build rMATS with required dependencies
+./build_rmats --conda
+
+# Running rMATS with conda environment
+./run_rmats {arguments}
+```
+
+### Usage:
+#### **Running with FASTQ files**
+1. Prepare sample lists in a text file:
+```bash
+# Sample 1 FASTQ list (paired-end reads separated by ':', replicates by ',')
+echo '/path/to/1_1.R1.fastq:/path/to/1_1.R2.fastq,/path/to/1_2.R1.fastq:/path/to/1_2.R2.fastq' > s1.txt
+
+echo '/path/to/2_1.R1.fastq:/path/to/2_1.R2.fastq,/path/to/2_2.R1.fastq:/path/to/2_2.R2.fastq' > s2.txt
+```
+2. Run rMATS with FASTQ input:
+```bash
+python rmats.py --s1 s1.txt --s2 s2.txt --gtf annotation.gtf --bi STAR_index/ -t paired --readLength 50 --nthread 4 --od results/ --tmp temp/
+```
+
+#### **Running with BAM files**
+1. Prepare BAM file lists:
+```bash
+echo '/path/to/1_1.bam,/path/to/1_2.bam' > b1.txt
+echo '/path/to/2_1.bam,/path/to/2_2.bam' > b2.txt
+```
+2. Run rMATS with BAM input:
+```bash
+python rmats.py --b1 b1.txt --b2 b2.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od results/ --tmp temp/
+```
+
+### **Running rMATS in Steps:**
+- **Prep phase** (extract and process alignments):
+```bash
+python rmats.py --b1 b1.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od output/ --tmp tmp_prep --task prep
+```
+- **Post phase** (calculate statistical significance):
+```bash
+python rmats.py --b1 b1.txt --b2 b2.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od output/ --tmp tmp_post --task post
+```
+
+### **Statistical Model Options:**
+- **Enable paired statistics model**:
+```bash
+python rmats.py --b1 b1.txt --b2 b2.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od output/ --tmp tmp_post --paired-stats
+```
+- **Skip statistical testing (only generate raw splicing events):**
+```bash
+python rmats.py --b1 b1.txt --b2 b2.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od output/ --tmp tmp_post --statoff
+```
+
+### **Output Files:**
+- `[AS_Event].MATS.JC.txt` - Results including only junction-spanning reads.
+- `[AS_Event].MATS.JCEC.txt` - Results including junction and exon-spanning reads.
+- `fromGTF.[AS_Event].txt` - Identified alternative splicing events from annotation.
+- `JC.raw.input.[AS_Event].txt` - Raw count data for junction counts.
+- `JCEC.raw.input.[AS_Event].txt` - Raw count data including exon counts.
+
+### **Additional Features:**
+- **Detect novel splice sites:**
+```bash
+python rmats.py --b1 b1.txt --b2 b2.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od output/ --tmp tmp_post --novelSS
+```
+- **Use predefined event set:**
+```bash
+python rmats.py --b1 b1.txt --b2 b2.txt --gtf annotation.gtf -t paired --readLength 50 --nthread 4 --od output/ --tmp tmp_post --fixed-event-set events_dir/
+```
+
+### **Reference Documentation:**
+For more details, refer to the rMATS official documentation and command-line help:
+```bash
+python rmats.py -h
+```

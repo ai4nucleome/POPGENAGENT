@@ -1,0 +1,86 @@
+        {
+            "step_number": 5,
+            "description": "Calculate heterozygosity rates and inbreeding coefficients (F) for each individual across all 26 populations. These metrics provide insights into genetic diversity within individuals and populations. The observed and expected heterozygosity will be computed, along with the inbreeding coefficient F, which measures deviation from Hardy-Weinberg equilibrium.",
+            "input_filename": [
+                "./output/009/unrelated_1000GP.bed: genotype data with unrelated individuals",
+                "./output/009/unrelated_1000GP.bim: variant information",
+                "./output/009/unrelated_1000GP.fam: sample information"
+            ],
+            "output_filename": [
+                "./output/009/heterozygosity.het: heterozygosity statistics per individual",
+                "./output/009/heterozygosity_plot.png: visualization of heterozygosity distribution by population",
+                "./output/009/inbreeding_coefficients.txt: summary of F statistics by population"
+            ],
+            "tools": "PLINK, Python"
+        },
+
+plink --bfile ./output/009/unrelated_1000GP --het --out ./output/009/heterozygosity
+cat << 'EOF' > ./output/009/calculate_heterozygosity_stats.py
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Read heterozygosity data from PLINK output
+het_data = pd.read_csv("./output/009/heterozygosity.het", sep="\s+", header=0)
+
+# Read family information to get population labels
+fam_data = pd.read_csv("./output/009/unrelated_1000GP.fam", sep="\s+", header=None,
+                      names=["FID", "IID", "Father", "Mother", "Sex", "Phenotype"])
+
+# Merge heterozygosity data with population information
+merged_data = pd.merge(het_data, fam_data[['FID', 'IID']], on=['FID', 'IID'])
+
+# Calculate observed heterozygosity rate
+merged_data['Het_Rate'] = (merged_data['N(NM)'] - merged_data['O(HOM)']) / merged_data['N(NM)']
+
+# Group by population and calculate summary statistics
+pop_summary = merged_data.groupby('FID').agg({
+    'F': ['mean', 'std', 'min', 'max'],
+    'Het_Rate': ['mean', 'std']
+}).round(4)
+
+# Flatten column names
+pop_summary.columns = ['_'.join(col).strip() for col in pop_summary.columns.values]
+pop_summary.reset_index(inplace=True)
+pop_summary.rename(columns={'FID': 'Population'}, inplace=True)
+
+# Save inbreeding coefficients summary
+pop_summary.to_csv("./output/009/inbreeding_coefficients.txt", sep="\t", index=False)
+
+# Create heterozygosity distribution plot
+plt.figure(figsize=(14, 8))
+
+# Sort populations by mean heterozygosity for better visualization
+pop_order = merged_data.groupby('FID')['Het_Rate'].mean().sort_values().index.tolist()
+
+# Create boxplot
+ax = sns.boxplot(data=merged_data, x='FID', y='Het_Rate', order=pop_order, palette='Set3')
+ax.set_xlabel('Population', fontsize=12)
+ax.set_ylabel('Heterozygosity Rate', fontsize=12)
+ax.set_title('Distribution of Heterozygosity Rates Across 1000 Genomes Populations', fontsize=14)
+
+# Rotate x-axis labels for better readability
+plt.xticks(rotation=45, ha='right')
+
+# Add grid for better readability
+ax.grid(True, axis='y', alpha=0.3)
+
+# Adjust layout
+plt.tight_layout()
+
+# Save the plot
+plt.savefig("./output/009/heterozygosity_plot.png", dpi=300, bbox_inches='tight')
+plt.close()
+
+# Print summary statistics
+print("\nPopulation-level Summary Statistics:")
+print("="*80)
+print(pop_summary.to_string(index=False))
+print("\nTotal number of populations analyzed:", len(pop_summary))
+print("\nFiles created:")
+print("- ./output/009/heterozygosity.het: Individual heterozygosity statistics")
+print("- ./output/009/heterozygosity_plot.png: Heterozygosity distribution visualization")
+print("- ./output/009/inbreeding_coefficients.txt: Population-level F statistics summary")
+EOF
+python ./output/009/calculate_heterozygosity_stats.py

@@ -1,0 +1,20 @@
+// Search ranges and rules file for fsc28
+// ****************************
+
+[PARAMETERS]
+//#isInt? #name   #dist.#min  #max 
+1  NPOP1       logunif  1000   100000   output
+1  NPOP2       logunif  1000   100000   output
+1  NPOP3       logunif  1000   100000   output
+1  ANC0        logunif  1000   100000   output
+1  INTERMEDIATE logunif 1000   100000   output
+1  ANC12       logunif  1000   100000   output
+1  TDIV1       unif     100    1000     output
+1  TDIV2       unif     1100   2000     output
+1  TDIV3       unif     2100   3000     output
+0  MIG12       logunif  1e-6   1e-2     output
+0  MIG13       logunif  1e-6   1e-2     output
+0  MIG21       logunif  1e-6   1e-2     output
+0  MIG23       logunif  1e-6   1e-2     output
+0  MIG31       logunif  1e-6   1e-2     output
+0  MIG32       logunif  1e-6   1e-2     output

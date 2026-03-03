@@ -1,0 +1,118 @@
+## Quick Guide to DiffBind
+
+**DiffBind** is an R/Bioconductor package for analyzing differential binding (peaks) in ChIP-seq or ATAC-seq data. Below is a concise workflow:
+
+---
+
+### 1. Installation & Setup
+```r
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("DiffBind")
+
+library(DiffBind)
+```
+
+---
+
+### 2. Prepare Input Files
+
+- **SampleSheet.csv**: Each row describes one sample, including columns:
+  - `SampleID`, `Tissue`, `Factor`, `Condition`, `Replicate`
+  - `bamReads`, `bamControl` (paths to BAM files)
+  - `Peaks` (path to called peak file)
+  - `PeakCaller` (e.g., MACS2)
+
+Example:
+```csv
+SampleID,Tissue,Factor,Condition,Replicate,bamReads,bamControl,Peaks,PeakCaller
+S1,MCF7,ER,Responsive,1,S1.bam,S1_input.bam,S1_peaks.bed,macs2
+S2,MCF7,ER,Responsive,2,S2.bam,S2_input.bam,S2_peaks.bed,macs2
+...
+```
+
+---
+
+### 3. Read & Merge Peaks
+```r
+# Read metadata from CSV and merge overlapping peaks
+dbObj <- dba(sampleSheet = "SampleSheet.csv")
+plot(dbObj)  # Heatmap of sample correlations
+```
+
+---
+
+### 4. Count Reads in Peaks
+```r
+# Counts reads from BAM files in merged peak regions
+# bUseSummarizeOverlaps=TRUE uses a more standardized counting method
+dbObj <- dba.count(dbObj, bUseSummarizeOverlaps=TRUE)
+
+# Optional: library size normalization
+dbObj <- dba.normalize(dbObj)
+```
+
+---
+
+### 5. Differential Analysis
+
+1. **Set contrast** (which groups to compare):
+```r
+# Example: Condition = "Resistant" vs. "Responsive", with "Responsive" as baseline
+# or specify a design formula including multiple factors
+
+dbObj <- dba.contrast(dbObj, reorderMeta=list(Condition="Responsive"))
+```
+
+2. **Run differential binding** (using DESeq2 by default):
+```r
+dbObj <- dba.analyze(dbObj)
+
+# Show results (number of significantly changed sites)
+dba.show(dbObj, bContrasts=TRUE)
+```
+
+3. **Extract differentially bound peaks**:
+```r
+dbSites <- dba.report(dbObj)
+
+# Convert to data frame, filter by FDR, save as BED
+out <- as.data.frame(dbSites)
+sigPeaks <- out[out$FDR < 0.05, c("seqnames","start","end","strand","Fold")]
+write.table(sigPeaks, "diffbind_sig_peaks.bed", sep="\t", row.names=FALSE, col.names=FALSE)
+```
+
+---
+
+### 6. Visualization
+
+- **Heatmap**:
+  ```r
+  dba.plotHeatmap(dbObj)
+  ```
+
+- **PCA**:
+  ```r
+  dba.plotPCA(dbObj, label=DBA_CONDITION)
+  ```
+
+- **Venn Diagram** (overlaps):
+  ```r
+  dba.plotVenn(dbObj, contrast=1)
+  ```
+
+- **Volcano Plot**:
+  ```r
+  dba.plotVolcano(dbObj)
+  ```
+
+---
+
+### Key Points
+1. **SampleSheet** + **peak files** + **BAM files** required.
+2. Merged peaks → read counting → normalization → differential analysis.
+3. Results are retrieved via `dba.report()`. Visualization includes heatmaps, PCA, venn diagrams.
+4. By default, **DESeq2** is used, but **edgeR** can also be specified.
+
+For more detail, see the [DiffBind vignette](https://bioconductor.org/packages/release/bioc/vignettes/DiffBind/inst/doc/DiffBind.pdf).

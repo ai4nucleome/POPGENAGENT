@@ -1,0 +1,28 @@
+GeneFEAST run.yml Configuration Instructions must include:Step1: Use shell command to create the run.yml file. Description: You can create the configuration file using shell redirection with `cat << 'EOF' > run.yml`, followed by the structured YAML content, and then closed with `EOF`. This approach allows easy inline editing in terminal or scripts. Step2: Fill in configuration content. Description: The configuration consists of FEA result references, gene-of-interest (GOI) files, optional keyword annotations, and tooltips options. The following fields must be specified: 
+
+FEAs:
+    - id: "mmc2_3h"
+      goi_file: "./GeneFEAST/mmc2_goi_3h.csv"
+      fea_file: "./GeneFEAST/GO_BP_3h_0.0001_4GF_basic.csv"
+
+    - id: "mmc2_24h"
+      goi_file: "./GeneFEAST/mmc2_goi_24h.csv"
+      fea_file: "./GeneFEAST/GO_BP_24h_0.0001_4GF_basic.csv"
+
+SEARCH_WORDS:
+- Covid 19
+- sars-cov-2
+
+EA_FILE: ./GeneFEAST/mmc2_3h_24h_extra_annotations.txt
+
+TOOLTIPS: True
+
+Description of Fields: 
+- id: A unique identifier for each FEA dataset, such as "mmc2_3h" or "mmc2_24h".
+- goi_file: Path to the CSV file containing the gene-of-interest list.
+- fea_file: Path to the functional enrichment analysis result CSV file.
+- SEARCH_WORDS: List of keywords used to highlight or search annotations (e.g., disease-related terms).
+- EA_FILE: Path to an additional annotations file linking gene-level metadata across datasets.
+- TOOLTIPS: Boolean to enable or disable additional visual tooltips in the final report.
+
+Tools Used: Bash command line with heredoc syntax, manual editing of YAML fields.

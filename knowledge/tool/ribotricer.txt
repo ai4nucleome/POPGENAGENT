@@ -1,0 +1,53 @@
+ribotricer: Accurate detection of short and long active ORFs using Ribo-seq data
+
+ribotricer is a tool that helps in detecting actively translating open reading frames (ORFs) from Ribo-seq data. It works by assessing the periodicity of candidate ORFs. To run ribotricer, the following files are required:
+
+1. **Genome annotation file** in GTF format (handles variations of GTFs including GENCODE and Ensembl)
+2. **Reference genome file** in FASTA format
+3. **Alignment file** in BAM format
+
+### Installation
+To install ribotricer using conda, execute:
+
+```bash
+conda create -n ribotricer_env -c bioconda ribotricer
+conda activate ribotricer_env
+ribotricer --help
+```
+
+Alternatively, to install locally, download the source code and run:
+
+```bash
+make install
+```
+
+### Workflow
+1. **Preparing candidate ORFs**
+
+   Run ribotricer to find all candidate ORFs from the GTF and FASTA files:
+   ```bash
+   ribotricer prepare-orfs --gtf {GTF} --fasta {FASTA} --prefix {RIBOTRICER_INDEX_PREFIX}
+   ```
+   This generates a file with candidate ORFs: `{PREFIX}_candidate_orfs.tsv`.
+
+2. **Detecting translating ORFs**
+
+   Detect active translation from BAM file:
+   ```bash
+   ribotricer detect-orfs --bam {BAM} --ribotricer_index {RIBOTRICER_INDEX_PREFIX}_candidate_ORFs.tsv --prefix {OUTPUT_PREFIX}
+   ```
+   This will generate output such as `{OUTPUT_PREFIX}_translating_ORFs.tsv`.
+
+### Additional Features
+- **Learn cutoff empirically from data** using both Ribo-seq and RNA-seq BAM files.
+- **Visualization** of ribotricer output available in the provided notebooks.
+
+For more details and troubleshooting, refer to the [documentation](https://github.com/smithlabcode/ribotricer/issues).
+
+### Dependencies
+- pyfaidx>=0.5.0
+- pysam>=0.11.2.2
+- numpy>=1.11.0
+- pandas>=0.20.3
+- scipy>=0.19.1
+- matplotlib>=2.1.0

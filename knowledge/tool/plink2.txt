@@ -1,0 +1,50 @@
+PLINK2 (plink2) - Modern Population Genetics Toolkit
+=====================================================
+
+PLINK2 is the next-generation version of PLINK, significantly faster and more memory-efficient.
+Supports VCF, BCF, BGEN, and PLINK 1/2 formats natively.
+
+## Installation
+conda install -c bioconda plink2
+
+## Key Commands
+
+### Quality Control
+plink2 --bfile input --maf 0.05 --geno 0.05 --mind 0.1 --hwe 1e-6 --make-bed --out filtered
+plink2 --bfile input --snps-only just-acgt --max-alleles 2 --make-bed --out biallelic
+
+### LD Pruning
+plink2 --bfile input --indep-pairwise 50 5 0.2 --out prune
+plink2 --bfile input --extract prune.prune.in --make-bed --out pruned
+
+### Frequency Calculation
+plink2 --bfile input --freq --out allele_freq
+plink2 --bfile input --freq counts --out allele_counts
+
+### FST Calculation
+plink2 --bfile input --fst POP --pheno pop_file.txt --out fst_results
+# Output: fst_results.fst.summary (genome-wide) and fst_results.fst (per-SNP)
+
+### Hardy-Weinberg
+plink2 --bfile input --hardy --out hwe_results
+
+### Sample/Variant Filtering
+plink2 --bfile input --keep samples.txt --make-bed --out subset
+plink2 --bfile input --remove related.txt --make-bed --out unrelated
+plink2 --bfile input --extract snps.txt --make-bed --out selected_snps
+plink2 --bfile input --chr 1-22 --make-bed --out autosomes_only
+
+### Format Conversion
+plink2 --bfile input --export vcf bgz --out output    # PLINK -> VCF
+plink2 --vcf input.vcf.gz --make-bed --out output      # VCF -> PLINK
+plink2 --bfile input --export bgen-1.2 --out output     # PLINK -> BGEN
+
+### Population-Stratified Analysis
+plink2 --bfile input --within clusters.txt --freq --out stratified_freq
+
+## Key Advantages over PLINK1
+- 10-100x faster for most operations
+- Native VCF/BCF/BGEN support
+- Better memory management
+- Improved FST calculation (Hudson estimator)
+- Support for dosage data

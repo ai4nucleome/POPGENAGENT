@@ -1,0 +1,77 @@
+PSMC & MSMC - Sequential Markovian Coalescent for Demographic History
+=====================================================================
+
+## PSMC (Pairwise Sequentially Markovian Coalescent)
+Infers population size changes from a single diploid genome.
+
+### Installation
+conda install -c bioconda psmc
+
+### Workflow
+# Step 1: Generate diploid consensus FASTA from BAM
+samtools mpileup -C50 -uf ref.fa sample.bam | bcftools call -c | vcfutils.pl vcf2fq -d 10 -D 100 | gzip > diploid.fq.gz
+
+# Step 2: Create PSMC input
+fq2psmcfa -q20 diploid.fq.gz > diploid.psmcfa
+
+# Step 3: Run PSMC
+psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o output.psmc diploid.psmcfa
+
+# Step 4: Bootstrap (100 replicates)
+splitfa diploid.psmcfa > split.psmcfa
+seq 100 | xargs -I {} psmc -N25 -t15 -r5 -b -p "4+25*2+4+6" -o round-{}.psmc split.psmcfa
+
+# Step 5: Plot
+psmc_plot.pl -u 1.4e-08 -g 25 -p output output.psmc
+# -u: mutation rate per bp per generation
+# -g: generation time in years
+
+### Key Parameters
+# -N: maximum number of iterations (25 recommended)
+# -t: maximum 2N0 coalescent time (15)
+# -r: initial theta/rho ratio (5)
+# -p: pattern of time intervals (atomic intervals)
+
+---
+
+## MSMC2 (Multiple Sequentially Markovian Coalescent)
+Infers population size history and split times using multiple haplotypes (2-8 haplotypes).
+
+### Installation
+conda install -c bioconda msmc2
+
+### Workflow
+# Step 1: Prepare input from VCF + mask files
+generate_multihetsep.py --chr chr1 \
+  --mask ind1_mask.bed.gz --mask ind2_mask.bed.gz \
+  --negative_mask mappability_mask.bed.gz \
+  ind1.vcf.gz ind2.vcf.gz > input_chr1.txt
+
+# Step 2: Run MSMC2
+msmc2 -t 4 -o output input_chr*.txt
+
+# Step 3: For cross-population comparison (split times)
+msmc2 -t 4 -I 0,1,2,3 -o within_pop1 input_chr*.txt    # Within pop1
+msmc2 -t 4 -I 4,5,6,7 -o within_pop2 input_chr*.txt    # Within pop2
+msmc2 -t 4 -I 0,1,4,5 -o cross_pop input_chr*.txt       # Cross-population
+
+# Step 4: Calculate cross-coalescence rate
+combineCrossCoal.py cross_pop.final.txt within_pop1.final.txt within_pop2.final.txt > combined.txt
+
+### Plotting (Python)
+import matplotlib.pyplot as plt
+import numpy as np
+
+mu = 1.25e-8  # mutation rate
+gen = 29      # generation time
+
+data = np.loadtxt('output.final.txt', skiprows=1)
+t = data[:,1] / mu * gen       # time in years
+ne = (1/data[:,3]) / (2*mu)    # effective population size
+
+plt.step(t, ne)
+plt.xscale('log')
+plt.xlabel('Years ago')
+plt.ylabel('Effective population size (Ne)')
+plt.title('PSMC/MSMC2 Demographic History')
+plt.savefig('demographic_history.png', dpi=300)

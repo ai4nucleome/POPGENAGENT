@@ -1,0 +1,80 @@
+# Out-of-Africa Demographic Model
+# Based on Gutenkunst et al. (2009) OOA model
+# DOI: https://doi.org/10.1371/journal.pgen.1000695
+
+description: "Out-of-Africa model of human history with intermediate Eurasian population"
+doi: ["https://doi.org/10.1371/journal.pgen.1000695"]
+time_units: "years"
+generation_time: 25
+
+demes:
+  - name: "ancestral"
+    description: "Equilibrium/root population"
+    epochs:
+      - end_time: 220000
+        start_size: 7300
+  
+  - name: "AMH"
+    description: "Anatomically modern humans"
+    ancestors: ["ancestral"]
+    epochs:
+      - end_time: 140000
+        start_size: 12300
+  
+  - name: "OOA"
+    description: "Bottleneck out-of-Africa population"
+    ancestors: ["AMH"]
+    epochs:
+      - end_time: 21200
+        start_size: 2100
+  
+  - name: "YRI"
+    description: "Yoruba in Ibadan, Nigeria"
+    ancestors: ["AMH"]
+    epochs:
+      - start_size: 12300
+  
+  - name: "EURASIAN"
+    description: "Eurasian population after out-of-Africa"
+    ancestors: ["OOA"]
+    epochs:
+      - end_time: 50000
+        start_size: 2100
+  
+  - name: "CEU"
+    description: "Utah Residents (CEPH) with Northern and Western European Ancestry"
+    ancestors: ["EURASIAN"]
+    epochs:
+      - start_size: 1000
+        end_size: 29725
+  
+  - name: "CHB"
+    description: "Han Chinese in Beijing, China"
+    ancestors: ["EURASIAN"]
+    epochs:
+      - start_size: 510
+        end_size: 54090
+
+migrations:
+  - source: "YRI"
+    dest: "OOA"
+    rate: 0.00025
+  - source: "YRI"
+    dest: "CEU"
+    rate: 0.00003
+  - source: "YRI"
+    dest: "CHB"
+    rate: 0.000019
+  - source: "CEU"
+    dest: "CHB"
+    rate: 0.000096
+  - source: "CHB"
+    dest: "CEU"
+    rate: 0.000096
+
+# Key principles for Out-of-Africa models:
+# 1. YRI diverges first from ancestral population
+# 2. Eurasian intermediate population is created after out-of-Africa
+# 3. CEU and CHB diverge from shared Eurasian population later
+# 4. Time ordering: YRI divergence > Eurasian formation > CEU-CHB divergence
+# 5. Include gene flow between CEU and CHB after their divergence

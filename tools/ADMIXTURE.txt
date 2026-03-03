@@ -1,0 +1,3 @@
+https://speciationgenomics.github.io/ADMIXTURE/
+https://gaworkshop.readthedocs.io/en/latest/contents/07_admixture/admixture.html
+https://dalexander.github.io/admixture/admixture-manual.pdf

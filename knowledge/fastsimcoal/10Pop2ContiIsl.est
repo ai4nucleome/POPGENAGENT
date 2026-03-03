@@ -1,0 +1,39 @@
+// Priors and rules file 
+// ********************* 
+ 
+[PARAMETERS] 
+//#isInt? #name   #dist.#min  #max 
+//all Ns are in number of haploid individuals 
+1  ANCSIZE     unif     10  100000    output 
+0  NM0         logunif  0.01  100     output 
+0  NM1         logunif  0.01  100     output 
+0  NM2         logunif  0.01  100     output 
+0  NM3         logunif  0.01  100     output 
+0  NM4         logunif  0.01  100     output 
+0  NM5         logunif  0.01  100     output 
+0  NM6         logunif  0.01  100     output 
+0  NM7         logunif  0.01  100     output 
+0  NM8         logunif  0.01  100     output 
+0  NM9         logunif  0.01  100     output 
+0  NM_12        logunif  0.01  100    output 
+1  TISLAND1    unif     10    20000   output 
+1  TPLUS       unif     10    20000   hide 
+ 
+[RULES] 
+ 
+[COMPLEX PARAMETERS] 
+ 
+//Assume an island haploid population size of 1000 for all islands  
+1  TISLAND2 = TISLAND1+TPLUS output 
+0  M010 =  NM0/1000          hide 
+0  M110 =  NM1/1000          hide 
+0  M210 =  NM2/1000          hide 
+0  M310 =  NM3/1000          hide 
+0  M410 =  NM4/1000          hide 
+0  M511 =  NM5/1000          hide 
+0  M611 =  NM6/1000          hide 
+0  M711 =  NM7/1000          hide 
+0  M811 =  NM8/1000          hide 
+0  M911 =  NM9/1000          hide 
+0  M1211 = NM_12/2000        hide 
+0  RESIZE = ANCSIZE/20000000 hide

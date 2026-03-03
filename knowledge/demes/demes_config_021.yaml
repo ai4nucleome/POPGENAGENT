@@ -1,0 +1,48 @@
+# Goal: I want to construct a migration and separation model  The two-population model AFR,EUR
+# Generated from output 021
+# Successfully validated
+
+demes:
+- description: Ancestral population before AFR-EUR split
+  epochs:
+  - end_time: 148000
+    start_size: 7310
+  - end_time: 51000
+    start_size: 14474
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: African population
+  epochs:
+  - end_time: 5115
+    start_size: 14474
+  - end_size: 432125
+    end_time: 0
+  name: AFR
+- ancestors:
+  - ancestral
+  description: European population
+  epochs:
+  - end_time: 23000
+    start_size: 1861
+  - end_size: 9279
+    end_time: 5115
+    start_size: 1032
+  - end_size: 501436
+    end_time: 0
+  name: EUR
+description: Two-population migration and separation model for African and European
+  populations
+generation_time: 25
+migrations:
+- demes:
+  - AFR
+  - EUR
+  end_time: 5115
+  rate: 0.00015
+- demes:
+  - AFR
+  - EUR
+  rate: 2.5e-05
+  start_time: 5115
+time_units: years

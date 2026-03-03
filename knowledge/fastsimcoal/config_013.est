@@ -1,0 +1,49 @@
+// Search ranges and rules file
+// ****************************
+
+[PARAMETERS]
+// Population size parameters
+1  NPOP_JPT     logunif  100      1e6     output
+1  NPOP_IBS     logunif  100      1e6     output
+1  NPOP_CHB     logunif  100      1e6     output
+1  NPOP_ACB     logunif  100      1e6     output
+1  NPOP_GBR     logunif  100      1e6     output
+1  NPOP_CHS     logunif  100      1e6     output
+1  NPOP_CEU     logunif  100      1e6     output
+1  NPOP_STU     logunif  100      1e6     output
+1  NPOP_MSL     logunif  100      1e6     output
+
+// Directly declared divergence times (non-overlapping ranges to ensure order)
+1  TDIV1        unif     100      1000    output
+1  TDIV2        unif     1100     2000    output
+1  TDIV3        unif     2100     3000    output
+1  TDIV4        unif     3100     4000    output
+1  TDIV5        unif     4100     5000    output
+1  TDIV6        unif     5100     6000    output
+1  TDIV7        unif     6100     7000    output
+1  TDIV8        unif     7100     8000    output
+1  TDIV9        unif     8100     9000    output
+
+// Migration parameters
+0  MIG01        logunif  1e-5     1e-2    output
+0  MIG02        logunif  1e-5     1e-2    output
+0  MIG05        logunif  1e-5     1e-2    output
+0  MIG06        logunif  1e-5     1e-2    output
+0  MIG10        logunif  1e-5     1e-2    output
+0  MIG14        logunif  1e-5     1e-2    output
+0  MIG17        logunif  1e-5     1e-2    output
+0  MIG20        logunif  1e-5     1e-2    output
+0  MIG25        logunif  1e-5     1e-2    output
+0  MIG26        logunif  1e-5     1e-2    output
+0  MIG39        logunif  1e-5     1e-2    output
+0  MIG41        logunif  1e-5     1e-2    output
+0  MIG47        logunif  1e-5     1e-2    output
+0  MIG50        logunif  1e-5     1e-2    output
+0  MIG52        logunif  1e-5     1e-2    output
+0  MIG56        logunif  1e-5     1e-2    output
+0  MIG60        logunif  1e-5     1e-2    output
+0  MIG62        logunif  1e-5     1e-2    output
+0  MIG65        logunif  1e-5     1e-2    output
+0  MIG71        logunif  1e-5     1e-2    output
+0  MIG74        logunif  1e-5     1e-2    output
+0  MIG93        logunif  1e-5     1e-2    output

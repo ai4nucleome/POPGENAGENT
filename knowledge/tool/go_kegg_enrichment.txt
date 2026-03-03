@@ -1,0 +1,170 @@
+GO/KEGG enrichment analysis First, install the required packages.
+
+#source("https://bioconductor.org/biocLite.R")
+#biocLite("DOSE")
+#biocLite("topGO")
+#biocLite("clusterProfiler")
+#biocLite("pathview")
+
+Load the packages:
+
+library(DOSE)
+library(org.Hs.eg.db)
+library(topGO)
+library(clusterProfiler)
+library(pathview)
+
+Import the data. The raw data is a gene list with one column (with a header):
+
+data <- read.table("gene.list", header=TRUE)
+data$GeneName <- as.character(data$GeneName)
+
+Convert gene names using org.Hs.eg.db:
+
+transID = bitr(data$GeneName,
+  fromType = "SYMBOL",
+  toType = c("ENSEMBL", "ENTREZID"),
+  OrgDb = "org.Hs.eg.db"
+)
+
+Create folders to store the results:
+
+dir.create("GO")
+dir.create("KEGG")
+
+GO_CC annotation:
+
+CC <- enrichGO(transID$ENTREZID,
+  "org.Hs.eg.db",
+  keyType = "ENTREZID",
+  ont = "CC",
+  pvalueCutoff = 0.05,
+  pAdjustMethod = "BH",
+  qvalueCutoff = 0.1
+)
+CC <- setReadable(CC, OrgDb = org.Hs.eg.db)
+
+svg(file = "./GO/GO_CC_Dotplot.svg", bg = "transparent")
+dotplot(CC, showCategory = 12, colorBy = "pvalue", font.size = 8, title = "GO_CC") # + theme(axis.text.y = element_text(angle = 45))
+dev.off()
+
+svg(file = "./GO/GO_CC_Barplot.svg", bg = "transparent")
+barplot(CC, showCategory = 12, title = "GO_CC", font.size = 8)
+dev.off()
+
+svg(file = "./GO/GO_CC_Network.svg", bg = "transparent")
+plotGOgraph(CC)
+dev.off()
+
+write.table(as.data.frame(CC@result), file = "./GO/GO_CC.xls", sep = "\t", row.names = F)
+
+GO_MF annotation:
+
+MF <- enrichGO(transID$ENTREZID, "org.Hs.eg.db", keyType = "ENTREZID", ont = "MF", pvalueCutoff = 0.05, pAdjustMethod = "BH", qvalueCutoff = 0.1)
+MF <- setReadable(MF, OrgDb = org.Hs.eg.db)
+
+svg(file = "./GO/GO_MF_Dotplot.svg", bg = "transparent")
+dotplot(MF, showCategory = 12, colorBy = "pvalue", font.size = 8, title = "GO_MF") # + theme(axis.text.y = element_text(angle = 45))
+dev.off()
+
+svg(file = "./GO/GO_MF_Barplot.svg", bg = "transparent")
+barplot(MF, showCategory = 12, title = "GO_MF", font.size = 8)
+dev.off()
+
+svg(file = "./GO/GO_MF_Network.svg", bg = "transparent")
+plotGOgraph(MF)
+dev.off()
+
+write.table(as.data.frame(MF@result), file = "./GO/GO_MF.xls", sep = "\t", row.names = F)
+
+GO_BP annotation:
+
+BP <- enrichGO(transID$ENTREZID, "org.Hs.eg.db", keyType = "ENTREZID", ont = "BP", pvalueCutoff = 0.05, pAdjustMethod = "BH", qvalueCutoff = 0.1)
+BP <- setReadable(BP, OrgDb = org.Hs.eg.db)
+
+svg(file = "./GO/GO_BP_Dotplot.svg", bg = "transparent")
+dotplot(BP, showCategory = 12, colorBy = "pvalue", font.size = 8, title = "GO_BP") # + theme(axis.text.y = element_text(angle = 45))
+dev.off()
+
+svg(file = "./GO/GO_BP_Barplot.svg", bg = "transparent")
+barplot(BP, showCategory = 12, title = "GO_BP", font.size = 8)
+dev.off()
+
+svg(file = "./GO/GO_BP_Network.svg", bg = "transparent")
+plotGOgraph(BP)
+dev.off()
+
+write.table(as.data.frame(BP@result), file = "./GO/GO_BP.xls", sep = "\t", row.names = F)
+
+KEGG annotation:
+
+kegg <- enrichKEGG(transID$ENTREZID, organism = "hsa", pvalueCutoff = 0.05, pAdjustMethod = "BH", qvalueCutoff = 0.1)
+kegg <- setReadable(kegg, OrgDb = org.Hs.eg.db, keytype = "ENTREZID")
+
+svg(file = "./KEGG/KEGG_Dotplot.svg", bg = "transparent")
+dotplot(kegg, showCategory = 12, colorBy = "pvalue", font.size = 8, title = "KEGG") # + theme(axis.text.y = element_text(angle = 45))
+dev.off()
+
+svg(file = "./KEGG/KEGG_Barplot.svg", bg = "transparent")
+barplot(kegg, showCategory = 12, title = "KEGG", font.size = 8)
+dev.off()
+
+write.table(as.data.frame(kegg@result), file = "./KEGG/kegg.xls", sep = "\t", row.names = F)
+
+Create a directory for KEGG pathway maps:
+
+dir.create("./KEGG/MAP")
+kegg_df = as.data.frame(kegg)
+
+for(i in kegg_df$ID){
+  pathview(gene.data = transID$ENTREZID,
+           pathway.id = i,
+           species = "hsa",
+           kegg.native = TRUE,
+           kegg.dir = "./KEGG/MAP"
+  )
+}
+
+print("TASK DONE")
+
+---
+
+CHIP-seq Functional enrichment analysis
+Once we have obtained the annotated nearest genes, we can perform functional enrichment analysis to identify predominant biological themes among these genes by incorporating biological knowledge provided by biological ontologies. For instance, Gene Ontology (GO) (Ashburner et al. 2000) annotates genes to biological processes, molecular functions, and cellular components in a directed acyclic graph structure; Kyoto Encyclopedia of Genes and Genomes (KEGG) (Kanehisa et al. 2004) annotates genes to pathways; Disease Ontology (DO) (Schriml et al. 2011) annotates genes with human disease association; and Reactome (Croft et al. 2013) annotates genes to pathways and reactions.
+
+ChIPseeker also provides a function, seq2gene, for linking genomic regions to genes in a many-to-many mapping. It considers the host gene (exon/intron), promoter region, and flanking gene from intergenic regions that may be under cis-regulation. This function is designed to link both coding and non-coding genomic regions to coding genes and facilitate functional analysis.
+
+Enrichment analysis is a widely used approach to identify biological themes. Several Bioconductor packages have been developed to investigate whether the number of selected genes associated with a particular biological term is larger than expected. These include DOSE (Yu et al. 2015) for Disease Ontology, ReactomePA for Reactome pathway analysis, and clusterProfiler (Yu et al. 2012) for Gene Ontology and KEGG enrichment analysis.
+
+library(ReactomePA)
+
+pathway1 <- enrichPathway(as.data.frame(peakAnno)$geneId)
+head(pathway1, 2)
+##                          ID        Description GeneRatio   BgRatio RichFactor
+## R-HSA-9830369 R-HSA-9830369 Kidney development    19/499  46/11146  0.4130435
+## R-HSA-9758941 R-HSA-9758941       Gastrulation    27/499 125/11146  0.2160000
+##               FoldEnrichment    zScore       pvalue     p.adjust       qvalue
+## R-HSA-9830369       9.226017 12.102741 2.252177e-14 2.360281e-11 2.351747e-11
+## R-HSA-9758941       4.824721  9.309385 5.773075e-12 3.025091e-09 3.014153e-09
+##                                                                                                                                                   geneID
+## R-HSA-9830369                                          2625/5076/7490/652/6495/2303/3975/6928/10736/5455/7849/3237/6092/2122/255743/2296/3400/28514/2138
+## R-HSA-9758941 5453/5692/5076/5080/7546/3169/652/5015/2303/5717/3975/2627/5714/344022/7849/5077/2637/7022/8320/7545/6657/4487/51176/2296/28514/2626/64321
+##               Count
+## R-HSA-9830369    19
+## R-HSA-9758941    27
+gene <- seq2gene(peak, tssRegion = c(-1000, 1000), flankDistance = 3000, TxDb = txdb)
+pathway2 <- enrichPathway(gene)
+head(pathway2, 2)
+##                          ID        Description GeneRatio   BgRatio RichFactor
+## R-HSA-9830369 R-HSA-9830369 Kidney development    17/408  46/11146  0.3695652
+## R-HSA-9758941 R-HSA-9758941       Gastrulation    24/408 125/11146  0.1920000
+##               FoldEnrichment    zScore       pvalue     p.adjust       qvalue
+## R-HSA-9830369      10.096014 12.049721 1.806589e-13 1.765037e-10 1.709604e-10
+## R-HSA-9758941       5.245176  9.303549 1.834131e-11 8.959732e-09 8.678338e-09
+##                                                                                                                                    geneID
+## R-HSA-9830369                                      2625/5076/3227/652/6495/2303/3975/3237/6092/2122/255743/7490/6928/7849/5455/2296/28514
+## R-HSA-9758941 5453/5692/5076/7546/3169/652/2303/5717/3975/2627/5714/344022/2637/8320/7545/7020/2626/5080/5015/7849/51176/2296/64321/28514
+##               Count
+## R-HSA-9830369    17
+## R-HSA-9758941    24
+dotplot(pathway2)

@@ -1,0 +1,164 @@
+[
+    {
+        "content": "Complete Population Genetics Analysis Workflow - Detailed Step-by-Step\n\n**PHASE 1: DATA PREPROCESSING**\n\nStep 1.1 [ANALYSIS]: Basic Quality Filtering\n- Goal: Filter low-quality SNPs and samples\n- Input: Raw bed/bim/fam files\n- Output: filtered.bed/bim/fam\n- Tools: PLINK\n- Command: plink --bfile INPUT --maf 0.05 --geno 0.05 --mind 0.1 --biallelic-only strict --make-bed --out filtered\n\nStep 1.2 [ANALYSIS]: LD Pruning Round 1 (for kinship)\n- Goal: Remove correlated SNPs for kinship analysis\n- Input: filtered.bed\n- Output: ld_pruned1.bed/bim/fam, prune1.prune.in\n- Tools: PLINK\n- Parameters: window=50, step=5, r2=0.2\n- Command: plink --bfile filtered --indep-pairwise 50 5 0.2 --out prune1 && plink --bfile filtered --extract prune1.prune.in --make-bed --out ld_pruned1\n\nStep 1.3 [ANALYSIS]: Kinship Detection with KING\n- Goal: Identify related individuals\n- Input: ld_pruned1.bed\n- Output: kinship.kin0, related_to_remove.txt\n- Tools: KING\n- Threshold: kinship > 0.0884 (3rd degree)\n- Command: king -b ld_pruned1.bed --related --prefix kinship && awk 'NR>1 {print $2, $3}' kinship.kin0 > related_to_remove.txt\n\nStep 1.4 [ANALYSIS]: Remove Related Individuals\n- Goal: Create unrelated sample set\n- Input: filtered.bed, related_to_remove.txt\n- Output: unrelated.bed/bim/fam\n- Tools: PLINK\n- Command: plink --bfile filtered --remove related_to_remove.txt --make-bed --out unrelated",
+        "metadata": {
+            "id": "workflow_phase1_preprocessing",
+            "source": "workflow",
+            "category": "preprocessing",
+            "phase": 1
+        }
+    },
+    {
+        "content": "**PHASE 2: BASIC STATISTICS**\n\nStep 2.1 [ANALYSIS]: ROH Calculation\n- Goal: Detect runs of homozygosity\n- Input: unrelated.bed\n- Output: roh_segments.hom, roh_segments.hom.indiv, roh_segments.hom.summary\n- Tools: PLINK\n- Command: plink --bfile unrelated --homozyg --homozyg-snp 50 --homozyg-kb 500 --homozyg-density 50 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 1 --homozyg-window-missing 5 --out roh_segments\n\nStep 2.2 [VISUALIZATION]: ROH Plotting\n- Goal: Generate ROH distribution plots\n- Input: roh_segments.hom.indiv, roh_segments.hom\n- Output: roh_length_distribution.png, roh_count_distribution.png, roh_category_distribution.png, roh_violin_plot.png, roh_scatter_plot.png\n- Tools: Python (matplotlib, seaborn)\n- Script Type: viz_roh\n- Template: Use ROH visualization template from Task_Knowledge\n\nStep 2.3 [ANALYSIS]: Heterozygosity Calculation\n- Goal: Calculate heterozygosity rates and F coefficients\n- Input: unrelated.bed\n- Output: heterozygosity_stats.het\n- Tools: PLINK\n- Command: plink --bfile unrelated --het --out heterozygosity_stats\n\nStep 2.4 [VISUALIZATION]: Heterozygosity Plotting\n- Goal: Generate heterozygosity distribution plots\n- Input: heterozygosity_stats.het\n- Output: heterozygosity_distribution.png, inbreeding_coefficient_distribution.png, observed_vs_expected_heterozygosity.png, heterozygosity_vs_inbreeding_scatter.png\n- Tools: Python\n- Script Type: viz_het\n- Template: Use Heterozygosity visualization template from Task_Knowledge\n\nStep 2.5 [ANALYSIS]: LD Decay Calculation\n- Goal: Calculate LD decay patterns per population\n- Input: unrelated.bed\n- Output: ld_decay_all_populations.txt (columns: POP, DIST_BIN, mean)\n- Tools: PLINK\n- Script: Loop through populations, calculate pairwise LD\n\nStep 2.6 [VISUALIZATION]: LD Decay Plotting\n- Goal: Generate LD decay curves\n- Input: ld_decay_all_populations.txt\n- Output: ld_decay_by_continent.png, ld_decay_all_populations_legend.png, ld_decay_rate_comparison.png\n- Tools: Python\n- Script Type: viz_lddecay\n- Template: Use LD Decay visualization template from Task_Knowledge",
+        "metadata": {
+            "id": "workflow_phase2_basic_stats",
+            "source": "workflow",
+            "category": "basic_statistics",
+            "phase": 2
+        }
+    },
+    {
+        "content": "**PHASE 3: POPULATION STRUCTURE ANALYSIS**\n\nStep 3.1 [ANALYSIS]: LD Pruning Round 2 (stricter)\n- Goal: Prepare data for PCA and ADMIXTURE\n- Input: unrelated.bed\n- Output: ld_pruned2.bed/bim/fam\n- Tools: PLINK\n- Parameters: r2=0.1 (stricter than round 1)\n- Command: plink --bfile unrelated --indep-pairwise 50 5 0.1 --out prune2 && plink --bfile unrelated --extract prune2.prune.in --make-bed --out ld_pruned2\n\nStep 3.2 [ANALYSIS]: File Conversion for smartPCA\n- Goal: Convert PLINK to EIGENSTRAT format\n- Input: ld_pruned2.bed/bim/fam\n- Output: pca.geno, pca.snp, pca.ind\n- Tools: PLINK, convertf\n- Commands:\n  plink --bfile ld_pruned2 --recode 12 --out pca_temp\n  awk '{print $1\"_\"$2, $1\"_\"$2, \"U\"}' pca_temp.ped > pca.ind\n  convertf -p par.convertf\n\nStep 3.3 [ANALYSIS]: PCA with smartPCA\n- Goal: Run Principal Component Analysis\n- Input: pca.geno, pca.snp, pca.ind\n- Output: pca_results.evec, pca_results.eval\n- Tools: smartPCA (EIGENSOFT)\n- Parameter file (par.smartpca):\n  genotypename: pca.geno\n  snpname: pca.snp\n  indivname: pca.ind\n  evecoutname: pca_results.evec\n  evaloutname: pca_results.eval\n  numoutevec: 20\n  numoutlieriter: 5\n- Command: smartpca -p par.smartpca\n\nStep 3.4 [VISUALIZATION]: PCA Plotting\n- Goal: Generate PCA scatter plots\n- Input: pca_results.evec, pca_results.eval\n- Output: pca_pc1_pc2_by_population.png, pca_pc1_pc2_by_continent.png, pca_pc1_pc3_by_population.png, pca_pc2_pc3_by_population.png, pca_scree_plot.png, pca_multi_panel.png\n- Tools: Python\n- Script Type: viz_pca\n- Template: Use PCA visualization template from Task_Knowledge\n\nStep 3.5 [ANALYSIS]: ADMIXTURE Analysis\n- Goal: Estimate ancestry proportions\n- Input: ld_pruned2.bed\n- Output: admixture_k2.Q through admixture_k12.Q, admixture_k2.P through admixture_k12.P, cv_errors.txt\n- Tools: ADMIXTURE\n- Command:\n  for K in {2..12}; do\n    admixture --cv ld_pruned2.bed $K -j4 2>&1 | tee admixture_k${K}.log\n    mv ld_pruned2.${K}.Q admixture_k${K}.Q\n    mv ld_pruned2.${K}.P admixture_k${K}.P\n  done\n  grep -h 'CV error' admixture_k*.log > cv_errors.txt\n\nStep 3.6 [VISUALIZATION]: ADMIXTURE Plotting\n- Goal: Generate ADMIXTURE bar plots\n- Input: admixture_k*.Q, ld_pruned2.fam\n- Output: admixture_k*.png, admixture_panel.png, admixture_cv_error.png\n- Tools: Python\n- Script Type: viz_admixture\n- Template: Use ADMIXTURE visualization template from Task_Knowledge",
+        "metadata": {
+            "id": "workflow_phase3_structure",
+            "source": "workflow",
+            "category": "population_structure",
+            "phase": 3
+        }
+    },
+    {
+        "content": "**PHASE 4: ADVANCED ANALYSIS - TreeMix and Admixtools**\n\nIMPORTANT: For complete population genetics analysis, TreeMix and Admixtools are REQUIRED steps.\n\nStep 4.1 [ANALYSIS]: TreeMix Data Preparation\n- Goal: Convert PLINK to TreeMix allele frequency format\n- Input: ld_pruned2.bed/bim/fam\n- Output: treemix_input.treemix.frq.gz\n- Tools: PLINK, Python/custom script (bed2treemix.sh)\n- Commands:\n  # Create cluster file for stratified frequencies\n  awk '{print $1, $2, $1}' ld_pruned2.fam > treemix.clust\n  plink --bfile ld_pruned2 --freq --within treemix.clust --out treemix_input\n  # Convert stratified frequencies to TreeMix format using bed2treemix.sh or Python\n\nStep 4.2 [ANALYSIS]: TreeMix Migration Modeling\n- Goal: Infer population splits and historical migration events (gene flow)\n- Input: treemix_input.treemix.frq.gz\n- Output: treemix_m0 to treemix_m5 (*.treeout.gz, *.vertices.gz, *.edges.gz, *.cov.gz, *.modelcov.gz, *.llik)\n- Tools: TreeMix\n- Parameters: m=0 to m=5 migration edges, root=YRI (African outgroup), k=10000 (SNP blocks)\n- Command:\n  for m in {0..5}; do\n    treemix -i treemix_input.treemix.frq.gz -m $m -o treemix_m${m} -root YRI -k 10000 -noss > treemix_m${m}.log 2>&1\n  done\n- Note: Compare log-likelihoods across m values to select optimal model\n\nStep 4.3 [VISUALIZATION]: TreeMix Plotting\n- Goal: Generate phylogenetic tree plots with migration arrows\n- Input: treemix_m*.treeout.gz, treemix_m*.cov.gz, treemix_m*.modelcov.gz\n- Output: treemix_tree_m0.png to treemix_tree_m5.png, treemix_panel.png, treemix_likelihood_plot.png\n- Tools: R (ape, RColorBrewer, ggplot2) with TreeMix plotting_funcs.R\n- Script Type: viz_treemix\n- Key R functions: source('plotting_funcs.R'), plot_tree(), plot_resid()\n\nStep 4.4 [ANALYSIS]: Admixtools F-statistics Analysis\n- Goal: Formal statistical tests for admixture (F3) and gene flow (D-statistics/F4)\n- Input: ld_pruned2.bed/bim/fam (or EIGENSTRAT format)\n- Output: f3_results.txt, d_statistics.txt, admixtools_summary.txt\n- Tools: admixtools R package\n- Key Functions:\n  library(admixtools)\n  f3(prefix, target, source1, source2)  # F3 admixture test\n  f4(prefix, popA, popB, popC, popD)    # D-statistics\n  qpadm(prefix, target, left, right)    # Ancestry proportions\n- Interpretation:\n  F3: Negative F3 with Z < -3 indicates Target is admixed from Source1+Source2\n  D-statistics: |Z| > 3 indicates significant gene flow\n\nStep 4.5 [OPTIONAL VISUALIZATION]: Admixtools Results Summary\n- Goal: Summarize significant F3 and D-statistics results\n- Input: f3_results.txt, d_statistics.txt\n- Output: admixtools_summary.txt (formatted report with top signals)",
+        "metadata": {
+            "id": "workflow_phase4_advanced",
+            "source": "workflow",
+            "category": "advanced_analysis",
+            "phase": 4
+        }
+    },
+    {
+        "content": "Quick Workflow: PCA + ADMIXTURE Only\n\nStep 1 [ANALYSIS]: Quality Filtering\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --make-bed --out filtered\n\nStep 2 [ANALYSIS]: LD Pruning\n- plink --bfile filtered --indep-pairwise 50 5 0.1 --out prune\n- plink --bfile filtered --extract prune.prune.in --make-bed --out ld_pruned\n\nStep 3 [ANALYSIS]: smartPCA Analysis\n- Convert to EIGENSTRAT format\n- Run smartpca\n\nStep 4 [VISUALIZATION]: PCA Plotting\n- Script Type: viz_pca\n- Use Python template\n\nStep 5 [ANALYSIS]: ADMIXTURE\n- for K in {2..12}; do admixture --cv ld_pruned.bed $K; done\n\nStep 6 [VISUALIZATION]: ADMIXTURE Plotting\n- Script Type: viz_admixture\n- Use Python template",
+        "metadata": {
+            "id": "workflow_quick_pca_admixture",
+            "source": "workflow",
+            "category": "quick_analysis"
+        }
+    },
+    {
+        "content": "Quick Workflow: ROH + Heterozygosity + LD Decay\n\nStep 1 [ANALYSIS]: Quality Filtering\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --make-bed --out filtered\n\nStep 2 [ANALYSIS]: ROH Calculation\n- plink --bfile filtered --homozyg --homozyg-snp 50 --homozyg-kb 500 --out roh_segments\n\nStep 3 [VISUALIZATION]: ROH Plotting\n- Script Type: viz_roh\n- Output: roh_length_distribution.png, roh_count_distribution.png, roh_violin_plot.png, roh_scatter_plot.png\n\nStep 4 [ANALYSIS]: Heterozygosity Calculation\n- plink --bfile filtered --het --out het_stats\n\nStep 5 [VISUALIZATION]: Heterozygosity Plotting\n- Script Type: viz_het\n- Output: heterozygosity_distribution.png, inbreeding_coefficient_distribution.png\n\nStep 6 [ANALYSIS]: LD Decay Calculation\n- Loop through populations calculating pairwise LD\n\nStep 7 [VISUALIZATION]: LD Decay Plotting\n- Script Type: viz_lddecay\n- Output: ld_decay_by_continent.png, ld_decay_rate_comparison.png",
+        "metadata": {
+            "id": "workflow_quick_basic_stats",
+            "source": "workflow",
+            "category": "quick_analysis"
+        }
+    },
+    {
+        "content": "Visualization Task Identification Guide\n\nWhen task description contains these keywords, use corresponding script type:\n\n1. PCA Visualization (viz_pca):\n   - Keywords: PCA plot, PCA scatter, principal component, PC1 PC2, eigenvalue\n   - Input: .evec, .eval files\n   - Output: pca_*.png\n\n2. ADMIXTURE Visualization (viz_admixture):\n   - Keywords: ADMIXTURE plot, ancestry plot, K value plot, structure plot, bar plot\n   - Input: .Q files, .fam file\n   - Output: admixture_*.png\n\n3. ROH Visualization (viz_roh):\n   - Keywords: ROH plot, homozygosity plot, ROH distribution, ROH length\n   - Input: .hom.indiv, .hom files\n   - Output: roh_*.png\n\n4. Heterozygosity Visualization (viz_het):\n   - Keywords: heterozygosity plot, inbreeding plot, F coefficient, Het distribution\n   - Input: .het file\n   - Output: heterozygosity_*.png, inbreeding_*.png\n\n5. LD Decay Visualization (viz_lddecay):\n   - Keywords: LD decay plot, LD curve, linkage disequilibrium plot\n   - Input: ld_decay data file\n   - Output: ld_decay_*.png\n\n6. TreeMix Visualization (viz_treemix):\n   - Keywords: TreeMix plot, phylogenetic tree, migration plot, population tree\n   - Input: .treeout.gz files\n   - Output: treemix_*.png",
+        "metadata": {
+            "id": "viz_task_guide",
+            "source": "workflow",
+            "category": "visualization_guide"
+        }
+    },
+    {
+        "content": "Tool Reference - PLINK Commands\n\n1. Quality Control:\n   --maf 0.05 (minor allele frequency)\n   --geno 0.05 (SNP missing rate)\n   --mind 0.1 (individual missing rate)\n   --hwe 1e-6 (Hardy-Weinberg test)\n   --biallelic-only strict (biallelic sites only)\n\n2. LD Pruning:\n   --indep-pairwise 50 5 0.2 (window=50, step=5, r2=0.2)\n   --extract prune.prune.in (extract pruned SNPs)\n\n3. Statistics:\n   --het (heterozygosity)\n   --homozyg (ROH detection)\n   --r2 --ld-window-kb 2000 (LD calculation)\n   --freq (allele frequency)\n\n4. File Operations:\n   --make-bed (create binary files)\n   --recode 12 (convert to ped/map)\n   --keep/--remove (sample filtering)\n   --extract/--exclude (SNP filtering)",
+        "metadata": {
+            "id": "tool_plink",
+            "source": "tools",
+            "category": "bioinformatics"
+        }
+    },
+    {
+        "content": "Tool Reference - ADMIXTURE\n\nUsage: admixture --cv [bed_file] [K]\n\nParameters:\n- --cv: Enable cross-validation\n- -j[N]: Use N threads\n- -s [seed]: Set random seed\n\nBatch Run:\nfor K in {2..12}; do\n  admixture --cv ld_pruned.bed $K -j4 2>&1 | tee admixture_k${K}.log\n  mv ld_pruned.${K}.Q admixture_k${K}.Q\n  mv ld_pruned.${K}.P admixture_k${K}.P\ndone\n\nExtract CV Errors:\ngrep -h 'CV error' admixture_k*.log\n\nOptimal K: Choose K with lowest CV error",
+        "metadata": {
+            "id": "tool_admixture",
+            "source": "tools",
+            "category": "bioinformatics"
+        }
+    },
+    {
+        "content": "Tool Reference - smartPCA (EIGENSOFT)\n\nParameter File (par.smartpca):\ngenotypename: data.geno\nsnpname: data.snp\nindivname: data.ind\nevecoutname: pca_results.evec\nevaloutname: pca_results.eval\nnumoutevec: 20\nnumoutlieriter: 5\n\nPLINK to EIGENSTRAT Conversion:\n1. plink --bfile input --recode 12 --out temp\n2. Create .ind file: awk '{print $1\"_\"$2, $1\"_\"$2, \"U\"}' temp.ped > data.ind\n3. Create par.convertf and run convertf\n4. Run smartpca -p par.smartpca\n\nOutput Files:\n- .evec: Eigenvectors (PC values per sample)\n- .eval: Eigenvalues (variance explained)",
+        "metadata": {
+            "id": "tool_smartpca",
+            "source": "tools",
+            "category": "bioinformatics"
+        }
+    },
+    {
+        "content": "Tool Reference - KING\n\nUsage: king -b input.bed --related --prefix output\n\nKinship Thresholds:\n- > 0.354: Duplicate/MZ twin\n- [0.177, 0.354]: 1st degree (parent-offspring, siblings)\n- [0.0884, 0.177]: 2nd degree (half-siblings, grandparent)\n- [0.0442, 0.0884]: 3rd degree (first cousins)\n\nRemove Related:\nawk 'NR>1 {print $2, $3}' output.kin0 > related_to_remove.txt\nplink --bfile input --remove related_to_remove.txt --make-bed --out unrelated",
+        "metadata": {
+            "id": "tool_king",
+            "source": "tools",
+            "category": "bioinformatics"
+        }
+    },
+    {
+        "content": "Tool Reference - TreeMix\n\nWorkflow:\n1. Convert PLINK to TreeMix format\n2. Run with different m values:\n   for m in {0..5}; do\n     treemix -i input.frq.gz -m $m -o output_m$m -root OUTGROUP -k 10000\n   done\n3. Compare log-likelihoods to select optimal m\n\nParameters:\n- -m: Number of migration events\n- -root: Outgroup population\n- -k: SNP blocks for jackknife\n- -bootstrap: Number of bootstrap replicates",
+        "metadata": {
+            "id": "tool_treemix",
+            "source": "tools",
+            "category": "bioinformatics"
+        }
+    },
+    {
+        "content": "Tool Reference - Admixtools R Package\n\nSetup:\nlibrary(admixtools)\nlibrary(tidyverse)\n\nKey Functions:\n1. extract_f2(): Compute f2-statistics\n2. f3(): Outgroup f3-statistics\n3. f4()/qpdstat(): D-statistics\n4. qpadm(): Admixture proportions\n5. qpgraph(): Fit admixture graphs\n\nInput: bed/bim/fam or EIGENSTRAT format",
+        "metadata": {
+            "id": "tool_admixtools",
+            "source": "tools",
+            "category": "bioinformatics"
+        }
+    },
+    {
+        "content": "Focused Workflow: QC and LD Pruning ONLY\nKeywords: quality control, QC, filtering, MAF, LD pruning, prune\n\nThis is a SHORT workflow for data preprocessing ONLY. Do NOT include PCA, ADMIXTURE, or any downstream analysis.\n\nStep 1 [ANALYSIS]: Quality filtering with PLINK\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --mind 0.1 --biallelic-only strict --make-bed --out filtered\n\nStep 2 [ANALYSIS]: LD Pruning\n- plink --bfile filtered --indep-pairwise 50 5 0.2 --out prune\n- plink --bfile filtered --extract prune.prune.in --make-bed --out ld_pruned\n\nTotal: 2 steps. This workflow ends here.",
+        "metadata": {
+            "id": "workflow_focused_qc",
+            "source": "workflow",
+            "category": "focused_qc",
+            "workflow_type": "qc_only"
+        }
+    },
+    {
+        "content": "Focused Workflow: PCA Analysis ONLY\nKeywords: PCA, principal component analysis, smartPCA, eigensoft, population structure\n\nThis is a SHORT workflow for PCA analysis ONLY. Assumes data is already QC-filtered and LD-pruned.\n\nStep 1 [ANALYSIS]: Quality filtering (if not done)\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --biallelic-only strict --make-bed --out filtered\n\nStep 2 [ANALYSIS]: LD Pruning for PCA\n- plink --bfile filtered --indep-pairwise 50 5 0.1 --out prune\n- plink --bfile filtered --extract prune.prune.in --make-bed --out ld_pruned\n\nStep 3 [ANALYSIS]: Convert PLINK to EIGENSTRAT format\n- plink --bfile ld_pruned --recode 12 --out pca_temp\n- awk '{print $1\"_\"$2, $1\"_\"$2, \"U\"}' pca_temp.ped > pca.ind\n- Create par.convertf and run convertf\n\nStep 4 [ANALYSIS]: Run smartPCA\n- Create par.smartpca with numoutevec=20\n- smartpca -p par.smartpca\n\nStep 5 [VISUALIZATION]: PCA Plotting\n- Script Type: viz_pca\n- Generate PC1 vs PC2, PC1 vs PC3, scree plot\n\nTotal: 5 steps. This workflow ends here. Do NOT add ADMIXTURE or TreeMix.",
+        "metadata": {
+            "id": "workflow_focused_pca",
+            "source": "workflow",
+            "category": "focused_pca",
+            "workflow_type": "pca_only"
+        }
+    },
+    {
+        "content": "Focused Workflow: ADMIXTURE Analysis ONLY\nKeywords: ADMIXTURE, ancestry, K value, cross-validation, CV error, population clustering\n\nThis is a SHORT workflow for ADMIXTURE ONLY. Assumes data is already QC-filtered.\n\nStep 1 [ANALYSIS]: Quality filtering and LD Pruning\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --biallelic-only strict --make-bed --out filtered\n- plink --bfile filtered --indep-pairwise 50 5 0.1 --out prune\n- plink --bfile filtered --extract prune.prune.in --make-bed --out ld_pruned\n\nStep 2 [ANALYSIS]: Run ADMIXTURE for K=2 to K=12\n- cd ./output/{ID} && for K in {2..12}; do admixture --cv ld_pruned.bed $K -j4 > admixture_k${K}.log 2>&1; mv ld_pruned.${K}.Q admixture_k${K}.Q; mv ld_pruned.${K}.P admixture_k${K}.P; done\n- grep -h 'CV error' admixture_k*.log | sed 's/.*K=\\([0-9]*\\).*: \\(.*\\)/\\1\\t\\2/' > cv_errors.txt\n\nStep 3 [VISUALIZATION]: ADMIXTURE Plotting\n- Script Type: viz_admixture\n- Generate bar plots for each K, panel plot, and CV error plot\n\nTotal: 3 steps. This workflow ends here.",
+        "metadata": {
+            "id": "workflow_focused_admixture",
+            "source": "workflow",
+            "category": "focused_admixture",
+            "workflow_type": "admixture_only"
+        }
+    },
+    {
+        "content": "Focused Workflow: ROH + Heterozygosity + LD Decay (Genetic Diversity) ONLY\nKeywords: ROH, runs of homozygosity, heterozygosity, inbreeding, F coefficient, LD decay, linkage disequilibrium, genetic diversity\n\nThis is a focused workflow for genetic diversity statistics ONLY.\n\nStep 1 [ANALYSIS]: Quality filtering\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --biallelic-only strict --make-bed --out filtered\n\nStep 2 [ANALYSIS]: ROH Calculation\n- plink --bfile filtered --homozyg --homozyg-snp 50 --homozyg-kb 500 --out roh\n\nStep 3 [VISUALIZATION]: ROH Plotting\n- Script Type: viz_roh\n\nStep 4 [ANALYSIS]: Heterozygosity Calculation\n- plink --bfile filtered --het --out het\n\nStep 5 [VISUALIZATION]: Heterozygosity Plotting\n- Script Type: viz_het\n\nStep 6 [ANALYSIS]: LD Decay Calculation per population\n- Loop through populations, calculate pairwise LD with PLINK\n\nStep 7 [VISUALIZATION]: LD Decay Plotting\n- Script Type: viz_lddecay\n\nTotal: 7 steps. This workflow ends here. Do NOT add PCA, ADMIXTURE, or TreeMix.",
+        "metadata": {
+            "id": "workflow_focused_diversity",
+            "source": "workflow",
+            "category": "focused_diversity",
+            "workflow_type": "diversity_stats"
+        }
+    },
+    {
+        "content": "Focused Workflow: TreeMix + F-statistics ONLY\nKeywords: TreeMix, migration, population tree, phylogenetic, F3, F4, D-statistics, gene flow, admixtools, f-statistics\n\nThis is a focused workflow for TreeMix and formal admixture tests ONLY.\n\nStep 1 [ANALYSIS]: Quality filtering and LD Pruning\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --biallelic-only strict --make-bed --out filtered\n- plink --bfile filtered --indep-pairwise 50 5 0.1 --out prune\n- plink --bfile filtered --extract prune.prune.in --make-bed --out ld_pruned\n\nStep 2 [ANALYSIS]: TreeMix Data Preparation\n- bash ./scripts/bed2treemix.sh ./output/{ID}/ld_pruned\n- Or: awk '{print $1, $2, $1}' ld_pruned.fam > treemix.clust\n  plink --bfile ld_pruned --freq --within treemix.clust --out treemix_input\n\nStep 3 [ANALYSIS]: TreeMix Migration Modeling\n- for m in {0..5}; do treemix -i treemix_input.treemix.frq.gz -m $m -o treemix_m${m} -root YRI -k 10000 -noss; done\n\nStep 4 [VISUALIZATION]: TreeMix Plotting\n- Script Type: viz_treemix\n- Use R with plotting_funcs.R\n\nStep 5 [ANALYSIS]: Admixtools F-statistics\n- R script using admixtools package\n- F3 admixture tests and D-statistics\n\nTotal: 5 steps. This workflow ends here.",
+        "metadata": {
+            "id": "workflow_focused_treemix_fstats",
+            "source": "workflow",
+            "category": "focused_treemix",
+            "workflow_type": "treemix_fstats"
+        }
+    },
+    {
+        "content": "Focused Workflow: Kinship Detection and Related Individual Removal ONLY\nKeywords: kinship, KING, related individuals, relatedness, kinship coefficient, remove related\n\nThis is a SHORT workflow for kinship analysis ONLY.\n\nStep 1 [ANALYSIS]: Quality filtering\n- plink --bfile INPUT --maf 0.05 --geno 0.05 --biallelic-only strict --make-bed --out filtered\n\nStep 2 [ANALYSIS]: LD Pruning for kinship\n- plink --bfile filtered --indep-pairwise 50 5 0.2 --out prune\n- plink --bfile filtered --extract prune.prune.in --make-bed --out ld_pruned\n\nStep 3 [ANALYSIS]: KING kinship detection\n- king -b ld_pruned.bed --related --prefix kinship\n- awk 'NR>1 && $8 > 0.0884 {print $2, $3}' kinship.kin0 > related_to_remove.txt\n\nStep 4 [ANALYSIS]: Remove related individuals\n- plink --bfile filtered --remove related_to_remove.txt --make-bed --out unrelated\n\nTotal: 4 steps. This workflow ends here.",
+        "metadata": {
+            "id": "workflow_focused_kinship",
+            "source": "workflow",
+            "category": "focused_kinship",
+            "workflow_type": "kinship_only"
+        }
+    }
+]

@@ -1,0 +1,21 @@
+// Search ranges and rules file for fsc28
+[PARAMETERS]
+1  NPOP_JPT  logunif  1000 100000  output
+1  NPOP_IBS  logunif  1000 100000  output
+1  NPOP_CHB  logunif  1000 100000  output
+1  NPOP_ACB  logunif  1000 100000  output
+1  NPOP_GBR  logunif  1000 100000  output
+1  NPOP_CHS  logunif  1000 100000  output
+1  NPOP_CEU  logunif  1000 100000  output
+1  NPOP_STU  logunif  1000 100000  output
+1  NPOP_MSL  logunif  1000 100000  output
+1  TDIV01    unif      500  1000   output
+1  TDIV02    unif     1001  1500   output
+1  TDIV03    unif     1501  2000   output
+1  TDIV04    unif     2001  2500   output
+1  TDIV05    unif     2501  3000   output
+1  TDIV06    unif     3001  4000   output
+1  TDIV07    unif     4001  5000   output
+1  TDIV08    unif     5001  6000   output
+1  TDIV09    unif     6001  7000   output
+1  TDIV10    unif     7001  8000   output

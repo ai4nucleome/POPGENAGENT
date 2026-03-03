@@ -1,0 +1,135 @@
+ {
+            "step_number": 8,
+            "description": "Conduct Principal Component Analysis (PCA) using smartPCA to explore population structure and genetic differentiation among the 26 populations. The analysis will compute the top 20 principal components and visualize PC1 vs PC2, PC1 vs PC3, and PC2 vs PC3 to reveal population clustering patterns and potential admixture.",
+            "input_filename": [
+                "./output/019/ld_pruned2_1000GP.bed: strictly LD-pruned plink bed file for structure analysis",
+                "./output/019/ld_pruned2_1000GP.bim: strictly LD-pruned plink bim file for structure analysis",
+                "./output/019/ld_pruned2_1000GP.fam: strictly LD-pruned plink fam file for structure analysis"
+            ],
+            "output_filename": [
+                "./output/019/pca_results.evec: eigenvectors containing PC scores for each individual",
+                "./output/019/pca_results.eval: eigenvalues showing variance explained by each PC",
+                "./output/019/pca_plot_PC1_PC2.png: scatter plot of PC1 vs PC2 colored by population",
+                "./output/019/pca_plot_PC1_PC3.png: scatter plot of PC1 vs PC3 colored by population",
+                "./output/019/pca_variance_explained.png: scree plot showing variance explained by each PC"
+            ],
+            "tools": "smartPCA, Python"
+        },
+
+
+plink --bfile ./output/019/ld_pruned2_1000GP --recode 12 --out ./output/019/pca_temp
+awk '{print $1"_"$2, $1"_"$2, "U"}' ./output/019/pca_temp.ped > ./output/019/pca.ind
+cat << 'EOF' > ./output/019/par.convertf
+genotypename:    ./output/019/pca_temp.ped
+snpname:         ./output/019/pca_temp.map
+indivname:       ./output/019/pca.ind
+outputformat:    EIGENSTRAT
+genotypeoutname: ./output/019/pca.geno
+snpoutname:      ./output/019/pca.snp
+indivoutname:    ./output/019/pca.ind
+EOF
+convertf -p ./output/019/par.convertf
+cat << 'EOF' > ./output/019/par.smartpca
+genotypename: ./output/019/pca.geno
+snpname:      ./output/019/pca.snp
+indivname:    ./output/019/pca.ind
+evecoutname:  ./output/019/pca_results.evec
+evaloutname:  ./output/019/pca_results.eval
+numoutevec:   20
+EOF
+smartpca -p ./output/019/par.smartpca > ./output/019/smartpca.log
+cat << 'EOF' > ./output/019/visualize_pca.py
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Define population codes and colors for all 26 populations
+pop_colors = {
+    'ACB': '#FF6B6B', 'ASW': '#4ECDC4', 'BEB': '#45B7D1', 'CDX': '#96CEB4',
+    'CEU': '#FECA57', 'CHB': '#FF9FF3', 'CHS': '#54A0FF', 'CLM': '#48DBFB',
+    'ESN': '#0ABDE3', 'FIN': '#EE5A24', 'GBR': '#10AC84', 'GIH': '#5F27CD',
+    'GWD': '#C8D6E5', 'IBS': '#576574', 'ITU': '#222F3E', 'JPT': '#F368E0',
+    'KHV': '#FF6348', 'LWK': '#00D2D3', 'MSL': '#55EFC4', 'MXL': '#FDCB6E',
+    'PEL': '#6C5CE7', 'PJL': '#A29BFE', 'PUR': '#FD79A8', 'STU': '#BADC58',
+    'TSI': '#FF7979', 'YRI': '#686DE0'
+}
+
+# Read eigenvector file
+with open('./output/019/pca_results.evec', 'r') as f:
+    lines = f.readlines()
+
+# Parse eigenvectors
+data = []
+for line in lines:
+    if not line.startswith('#'):
+        parts = line.strip().split()
+        if len(parts) >= 22:  # ID + 20 PCs + control
+            data.append(parts)
+
+# Create DataFrame
+columns = ['ID'] + [f'PC{i}' for i in range(1, 21)] + ['Control']
+df = pd.DataFrame(data, columns=columns)
+
+# Extract population from ID
+df['Population'] = df['ID'].str.split('_').str[0]
+
+# Convert PCs to numeric
+for i in range(1, 21):
+    df[f'PC{i}'] = pd.to_numeric(df[f'PC{i}'], errors='coerce')
+
+# Read eigenvalues
+with open('./output/019/pca_results.eval', 'r') as f:
+    eigenvalues = [float(line.strip()) for line in f.readlines() if line.strip()]
+
+# Calculate variance explained
+total_var = sum(eigenvalues)
+var_explained = [(ev/total_var)*100 for ev in eigenvalues]
+
+# Create PC1 vs PC2 plot
+plt.figure(figsize=(10, 8))
+for pop in pop_colors:
+    pop_data = df[df['Population'] == pop]
+    if len(pop_data) > 0:
+        plt.scatter(pop_data['PC1'], pop_data['PC2'], 
+                   c=pop_colors[pop], label=pop, s=40, alpha=0.7, edgecolors='none')
+plt.xlabel(f'PC1 ({var_explained[0]:.2f}% variance)')
+plt.ylabel(f'PC2 ({var_explained[1]:.2f}% variance)')
+plt.title('PCA of 26 Populations - PC1 vs PC2')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', ncol=2, frameon=False)
+plt.tight_layout()
+plt.savefig('./output/019/pca_plot_PC1_PC2.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# Create PC1 vs PC3 plot
+plt.figure(figsize=(10, 8))
+for pop in pop_colors:
+    pop_data = df[df['Population'] == pop]
+    if len(pop_data) > 0:
+        plt.scatter(pop_data['PC1'], pop_data['PC3'], 
+                   c=pop_colors[pop], label=pop, s=40, alpha=0.7, edgecolors='none')
+plt.xlabel(f'PC1 ({var_explained[0]:.2f}% variance)')
+plt.ylabel(f'PC3 ({var_explained[2]:.2f}% variance)')
+plt.title('PCA of 26 Populations - PC1 vs PC3')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', ncol=2, frameon=False)
+plt.tight_layout()
+plt.savefig('./output/019/pca_plot_PC1_PC3.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# Create scree plot
+plt.figure(figsize=(10, 6))
+plt.bar(range(1, min(21, len(var_explained)+1)), var_explained[:20])
+plt.xlabel('Principal Component')
+plt.ylabel('Variance Explained (%)')
+plt.title('Scree Plot - Variance Explained by Principal Components')
+plt.xticks(range(1, 21))
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+plt.savefig('./output/019/pca_variance_explained.png', dpi=300)
+plt.close()
+
+print('PCA visualization complete.')
+print(f'Total samples analyzed: {len(df)}')
+print(f'Number of populations: {df["Population"].nunique()}')
+print(f'First 5 PCs explain {sum(var_explained[:5]):.2f}% of variance')
+EOF
+python ./output/019/visualize_pca.py

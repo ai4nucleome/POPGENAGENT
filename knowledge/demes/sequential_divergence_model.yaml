@@ -1,0 +1,58 @@
+# Sequential Divergence Model
+# Generic model for populations with intermediate groups
+
+description: "Sequential divergence model with intermediate populations"
+time_units: "years"
+generation_time: 25
+
+demes:
+  - name: "ancestral"
+    description: "Root ancestral population"
+    epochs:
+      - end_time: 100000
+        start_size: 10000
+  
+  - name: "POP1"
+    description: "First diverged population"
+    ancestors: ["ancestral"]
+    epochs:
+      - start_size: 5000
+  
+  - name: "INTERMEDIATE"
+    description: "Intermediate population for remaining groups"
+    ancestors: ["ancestral"]
+    epochs:
+      - end_time: 50000
+        start_size: 8000
+  
+  - name: "POP2"
+    description: "Second diverged population"
+    ancestors: ["INTERMEDIATE"]
+    epochs:
+      - start_size: 3000
+        end_size: 15000
+  
+  - name: "POP3"
+    description: "Third diverged population"
+    ancestors: ["INTERMEDIATE"]
+    epochs:
+      - start_size: 2000
+        end_size: 12000
+
+migrations:
+  - source: "POP1"
+    dest: "INTERMEDIATE"
+    rate: 0.0001
+  - source: "POP2"
+    dest: "POP3"
+    rate: 0.0002
+  - source: "POP3"
+    dest: "POP2"
+    rate: 0.00015
+
+# Key principles for sequential divergence models:
+# 1. First population diverges directly from ancestral
+# 2. Create intermediate population for remaining groups
+# 3. Remaining populations diverge from intermediate
+# 4. Time ordering: POP1 > INTERMEDIATE formation > POP2/POP3 divergence
+# 5. Include migration between related populations

@@ -1,0 +1,1 @@
+./fsc28 -t ./output/000/ana/IM20Mb.tpl -n100000 -N100000 -d -e ./output/000/ana/IM20Mb.est -M 0.001 -l 10 -L 40 -c6 -q 

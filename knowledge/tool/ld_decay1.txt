@@ -1,0 +1,114 @@
+        {
+            "step_number": 6,
+            "description": "Calculate linkage disequilibrium (LD) decay curves separately for each of the 26 populations. This analysis measures how quickly LD declines with physical distance between markers, providing insights into recombination history and effective population size. The analysis will compute pairwise r\u00b2 values for SNPs within specified distance bins (0-500kb) for each population independently.",
+            "input_filename": [
+                "./output/009/unrelated_1000GP.bed: genotype data with unrelated individuals",
+                "./output/009/unrelated_1000GP.bim: variant information",
+                "./output/009/unrelated_1000GP.fam: sample information with 26 population labels"
+            ],
+            "output_filename": [
+                "./output/009/ld_decay_all_populations.txt: LD decay statistics for all 26 populations",
+                "./output/009/ld_decay_plot.png: combined LD decay curves for all 26 populations",
+                "./output/009/ld_decay_per_pop/: directory containing individual LD decay files for each population"
+            ],
+            "tools": "PLINK, Python"
+        },
+
+cat << 'EOF' > ./output/009/calculate_ld_decay.py
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# Read sample information to get population labels
+fam_df = pd.read_csv('./output/009/unrelated_1000GP.fam', sep=' ', header=None,
+                     names=['FID', 'IID', 'PAT', 'MAT', 'SEX', 'PHENO'])
+
+# Get unique populations from FID (assuming population code is in FID)
+unique_pops = fam_df['FID'].unique()
+print(f"Found {len(unique_pops)} populations: {sorted(unique_pops)}")
+
+# Initialize lists to store results
+all_pop_results = []
+
+# Process each population
+for pop in unique_pops:
+    print(f"\nProcessing population: {pop}")
+    
+    # Create keep file for current population
+    pop_samples = fam_df[fam_df['FID'] == pop][['FID', 'IID']]
+    pop_samples.to_csv(f'./output/009/ld_decay_per_pop/{pop}_samples.txt', 
+                       sep=' ', header=False, index=False)
+    
+    # Calculate LD for this population using PLINK
+    plink_cmd = f"""plink --bfile ./output/009/unrelated_1000GP \
+        --keep ./output/009/ld_decay_per_pop/{pop}_samples.txt \
+        --r2 --ld-window 999999 --ld-window-kb 500 --ld-window-r2 0.0 \
+        --out ./output/009/ld_decay_per_pop/{pop}_ld"""
+    
+    os.system(plink_cmd)
+    
+    # Read and process LD results
+    try:
+        ld_file = f'./output/009/ld_decay_per_pop/{pop}_ld.ld'
+        if os.path.exists(ld_file):
+            ld_df = pd.read_csv(ld_file, delim_whitespace=True)
+            
+            # Calculate distance between SNPs
+            ld_df['DIST'] = abs(ld_df['BP_A'] - ld_df['BP_B'])
+            
+            # Create distance bins (0-500kb in 10kb bins)
+            bins = list(range(0, 510000, 10000))
+            ld_df['DIST_BIN'] = pd.cut(ld_df['DIST'], bins=bins, labels=bins[:-1])
+            
+            # Calculate mean r2 for each distance bin
+            r2_col = 'R2' if 'R2' in ld_df.columns else 'R^2'
+            ld_decay = ld_df.groupby('DIST_BIN')[r2_col].agg(['mean', 'count']).reset_index()
+            ld_decay['DIST_BIN'] = ld_decay['DIST_BIN'].astype(int)
+            ld_decay['POP'] = pop
+            
+            # Save individual population results
+            ld_decay.to_csv(f'./output/009/ld_decay_per_pop/{pop}_ld_decay.txt', 
+                           sep='\t', index=False)
+            
+            all_pop_results.append(ld_decay)
+            print(f"  Processed {len(ld_df)} SNP pairs for {pop}")
+        else:
+            print(f"  Warning: LD file not found for {pop}")
+    except Exception as e:
+        print(f"  Error processing {pop}: {str(e)}")
+
+# Combine all population results
+if all_pop_results:
+    combined_df = pd.concat(all_pop_results, ignore_index=True)
+    combined_df.to_csv('./output/009/ld_decay_all_populations.txt', sep='\t', index=False)
+    
+    # Create visualization
+    plt.figure(figsize=(12, 8))
+    
+    # Plot each population's LD decay curve
+    for pop in unique_pops:
+        pop_data = combined_df[combined_df['POP'] == pop]
+        if not pop_data.empty:
+            plt.plot(pop_data['DIST_BIN']/1000, pop_data['mean'], 
+                    label=pop, alpha=0.7, linewidth=1.5)
+    
+    plt.xlabel('Distance (kb)')
+    plt.ylabel('Mean r²')
+    plt.title('LD Decay Curves for 26 Populations')
+    plt.grid(True, alpha=0.3)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', ncol=2, fontsize=8)
+    plt.xlim(0, 500)
+    plt.ylim(0, 1)
+    plt.tight_layout()
+    plt.savefig('./output/009/ld_decay_plot.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"\nAnalysis complete! Processed {len(unique_pops)} populations")
+    print(f"Combined results saved to: ./output/009/ld_decay_all_populations.txt")
+    print(f"Plot saved to: ./output/009/ld_decay_plot.png")
+else:
+    print("\nError: No population results were successfully processed")
+EOF
+
+python ./output/009/calculate_ld_decay.py

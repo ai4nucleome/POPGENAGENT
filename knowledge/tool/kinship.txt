@@ -1,0 +1,22 @@
+ {
+            "step_number": 3,
+            "description": "Use KING software to identify related individuals based on kinship coefficients and remove them to ensure only unrelated samples remain in the dataset. KING will output a list of related individual pairs, and PLINK will be used to remove one individual from each related pair based on the kinship threshold (typically > 0.0884 for second-degree relatives).",
+            "input_filename": [
+                "./output/019/ld_pruned_1000GP.bed: LD-pruned plink bed file for kinship analysis",
+                "./output/019/ld_pruned_1000GP.bim: LD-pruned plink bim file for kinship analysis",
+                "./output/019/ld_pruned_1000GP.fam: LD-pruned plink fam file for kinship analysis"
+            ],
+            "output_filename": [
+                "./output/019/unrelated_1000GP.bed: plink bed file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.bim: plink bim file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.fam: plink fam file with unrelated individuals only",
+                "./output/019/king_kinship_results.txt: kinship coefficient results from KING analysis"
+            ],
+            "tools": "KING, PLINK"
+        },
+
+
+king -b ./output/019/ld_pruned_1000GP.bed --related --prefix ./output/019/king_kinship
+cp ./output/019/king_kinship.kin0 ./output/019/king_kinship_results.txt
+awk 'NR>1 && $8 > 0.0884 {print $2, $3}' ./output/019/king_kinship.kin0 > ./output/019/related_individuals_to_remove.txt
+plink --bfile ./output/019/ld_pruned_1000GP --remove ./output/019/related_individuals_to_remove.txt --make-bed --out ./output/019/unrelated_1000GP

@@ -1,0 +1,3 @@
+https://vcftools.github.io/documentation.html
+https://vcftools.github.io/man_latest.html
+https://vcftools.sourceforge.net/man_latest.html

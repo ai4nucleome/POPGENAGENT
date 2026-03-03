@@ -1,0 +1,55 @@
+# Goal: This is the obs file for the three populations,which are ESN,CLM,CEU from 1000GP. I hope to build a migration and separation model based on this obs file.
+# Generated from output 001
+# Successfully validated
+
+demes:
+- description: Equilibrium/root population
+  epochs:
+  - end_time: 67961
+    start_size: 5274
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Ancestral population of ESN and CLM/CEU
+  epochs:
+  - end_time: 4174
+    start_size: 40498
+  name: ANC12
+- ancestors:
+  - ANC12
+  description: Esan in Nigeria
+  epochs:
+  - start_size: 15574
+  name: ESN
+- ancestors:
+  - ANC12
+  description: Colombians from Medellin, Colombia
+  epochs:
+  - start_size: 1100
+  name: CLM
+- ancestors:
+  - ANC12
+  description: Utah Residents (CEPH) with Northern and Western European Ancestry
+  epochs:
+  - start_size: 3255
+  name: CEU
+description: Migration and separation model for ESN, CLM, and CEU populations from
+  1000 Genomes Project
+generation_time: 1
+migrations:
+- dest: CLM
+  rate: 1.25827e-06
+  source: ESN
+- dest: CEU
+  rate: 9.84582e-06
+  source: ESN
+- dest: ESN
+  rate: 1.30634e-06
+  source: CLM
+- dest: CEU
+  rate: 1.66477e-06
+  source: CLM
+- dest: ESN
+  rate: 1.31633e-06
+  source: CEU
+time_units: generations

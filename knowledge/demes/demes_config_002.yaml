@@ -1,0 +1,30 @@
+# Goal: This is the obs file for the two populations,which are ACB and STU from 1000GP. I hope to build a migration and separation model based on this obs file.
+# Generated from output 002
+# Successfully validated
+
+demes:
+- description: Ancestral population
+  epochs:
+  - end_time: 15094
+    start_size: 24099
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: African Caribbean in Barbados
+  epochs:
+  - start_size: 3182
+  name: ACB
+- ancestors:
+  - ancestral
+  description: Sri Lankan Tamil in the UK
+  epochs:
+  - start_size: 13759
+  name: STU
+description: Migration and separation model for ACB and STU populations from 1000GP
+  based on FastSimCoal2 maximum likelihood estimates
+generation_time: 1
+migrations:
+- dest: STU
+  rate: 0.000347696
+  source: ACB
+time_units: generations

@@ -1,0 +1,270 @@
+Before performing nanopore data process (except for modification identification, for example, identifying methylation) from nanopore files. If basecalling file (fastq/bam) is not supplied, firstly using basecaller.sh command to do simplex basecalling to generate basecalling file before other steps.
+Input : a file folder containing nanopore files in fast5/pod5 format and a reference genome fa file
+Output : a bam file.
+Usage
+Run the following in the container
+./scripts/basecaller.sh <pod5dir> <out>
+# pod5dir: Path of a file folder containing nanopore files in fast5/pod5 format.
+# out : name of output bam file.
+
+---
+
+1. basecaller.sh:
+do simplex basecalling. 
+Input : a file folder containing nanopore files in fast5/pod5 format
+Output : a bam file.
+Usage
+Run the following in the container
+./scripts/basecaller.sh <pod5dir> <out>
+# pod5dir: Path of a file folder containing nanopore files in fast5/pod5 format.
+# out : name of output bam file.
+ 
+
+---
+
+2. basecall_sum.sh:
+ output a tab-separated file with read level sequencing information from the bam file. 
+Input : basecaller’s output bam file 
+Output : a summary tsv file.
+Usage
+Run the following in the container
+./scripts/basecall_sum.sh <bam> <out>  
+# bam : basecaller’s output bam file.
+# out : name of output tsv file.
+
+---
+
+2. basecall_sum.sh:
+output a tab-separated file with read level sequencing information from the bam file generated during basecalling. 
+Input : basecaller’s output bam file 
+Output : a summary tsv file.
+Usage
+Run the following in the container
+./scripts/basecall_sum.sh <bam> <out>  
+# bam : basecaller’s output bam file.
+# out : name of output tsv file.
+
+
+---
+
+3. bam2fq.sh:
+ transfer bam file to fastq format.
+Input : basecaller’s output bam file 
+Output : a fastq file.
+Usage
+Run the following in the container
+./scripts/bam2fq.sh <numcore> <bam> <out>  
+# numcore : number of threads
+# bam : basecaller’s output bam file.
+# out : name of output fastq file. 
+
+
+---
+
+7. bam2fq.sh:
+ transfer bam file to fastq format.
+Input : host-gene-removal bam file 
+Output : a fastq file.
+Usage
+Run the following in the container
+./scripts/bam2fq.sh <numcore> <bam> <out>  
+# numcore : number of threads
+# bam : host-gene-removal bam file.
+# out : name of output fastq file.  
+
+
+---
+
+4. raw_plot.sh:
+ plot QC imformation from the basecall fastq file(raw_plot).
+Input : basecall fastq file 
+Output : sevaral png file and a report html file containing QC imformation.
+Usage
+Run the following in the container
+./scripts/raw_plot.sh <fastq> <outdir>  
+# fastq : basecall fastq file.
+# outdir : directory to store QC imformation files. 
+
+
+---
+
+5. filter.sh:
+ filter low_quality reads in basecall fastq file.
+Input : basecall fastq file 
+Output : a filtered fastq file.
+Usage
+Run the following in the container
+./scripts/filter.sh <fastq> <out>  
+# fastq : basecall fastq file.
+# out : name of filtered fastq file. 
+
+
+---
+
+6. host_removal.sh:
+ remove host gene in filtered fastq file.
+Input : filtered fastq file 
+Output : a bam file.
+Usage
+Run the following in the container
+./scripts/host_removal.sh <fa> <fastq> <out>  # fa:  host gene fasta file.
+# fastq : filtered fastq file.
+# out : name of output bam file. 
+
+
+---
+
+8. filtered_plot.sh:
+ plot QC imformation from the host-gene-removal fastq file(filtered_plot).
+Input : host-gene-removal fastq file 
+Output : sevaral png file and a report html file containing QC imformation.
+Usage
+Run the following in the container
+./scripts/filtered_plot.sh <fastq> <outdir>  
+# fastq : host-gene-removal fastq file.
+# outdir : directory to store QC imformation files.  
+
+
+---
+
+1. map_fastq2_ref.sh:
+Map combined fastq file to reference genome(fa file). Generates sam file.
+Input : a combined nanopore fastq file and a reference genome fa file
+Output : a sam file 
+Usage
+Run the following in the container.
+./scripts/map_fastq2_ref.sh <fq> <output_sam> <ref> <nThreads>
+# fq : input fastq file.
+# output_sam : name of output sam file.
+# ref : reference genome fa file
+# nThreads : number of threads
+
+
+---
+
+9. map_fastq2_ref.sh:
+Map host-gene-removal fastq file to reference genome(fa file). Generates sam file.
+Input : a  host-gene-removal fastq file and a reference genome fa file
+Output : a sam file 
+Usage
+Run the following in the container.
+./scripts/map_fastq2_ref.sh <fq> <output_sam> <ref> <nThreads>
+# fq :  host-gene-removal fastq file.
+# output_sam : name of output sam file.
+# ref : reference genome fa file
+# nThreads : number of threads
+
+
+---
+
+2. indexbam.sh:
+index bam and generate statistics - coverage, error rate, number of reads.
+Input: a sam file
+Output: a sorted bam file
+Usage
+Run the following in the container
+./scripts/indexbam.sh <nthread> <input_sam> <outputbam>
+# nthread : number of threads to use
+# input_sam : an input sam file
+# outputbam : name of output bam file
+
+
+---
+
+10. indexbam.sh:
+index bam and generate statistics - coverage, error rate, number of reads.
+Input: a sam file
+Output: a sorted bam file
+Usage
+Run the following in the container
+./scripts/indexbam.sh <nthread> <input_sam> <outputbam>
+# nthread : number of threads to use
+# input_sam : an input sam file
+# outputbam : name of output bam file
+
+
+---
+
+11. alignment_stats.sh:
+Get the alignment_stats report.
+Input : the sorted bam file
+Output : a alignment_stats txt file 
+Usage
+Run the following in the container.
+./scripts/alignment_stats.sh <bam> <out> 
+# bam :  the sorted bam file.
+# out : name of alignment_stats report txt file.
+# ref : reference genome fa file
+# nThreads : number of threads 
+
+
+---
+
+12. quantififation.sh:
+Generate transcripts and  gene_abundance tsv file from the sorted bam file.
+Input : the sorted bam file
+Output : a transcripts gtf file and a gene_abundance tsv file. 
+Usage
+Run the following in the container.
+./scripts/quantififation.sh <bam> <transcripts_gtf> <out> 
+# bam :  the sorted bam file. 
+# transcripts_gtf :  name of output transcripts gtf file.
+# out : name of output gene_abundance tsv file.
+
+
+---
+
+13. result_sum.sh:
+ make a new diroctory to store all the readable result. 
+Input : path to raw_plot dir, filterd_plot dir, alignment_stats report txt file, gene_abundance tsv file and basecall summary tsv file, a new diroctory path.  
+Usage
+Run the following in the container.
+./scripts/result_sum.sh <dir1> <dir2> <alignment_stats> <gene_abundance> <basecall> <report_dir>
+# dir1 : path to raw_plot QC imformation dir 
+# dir2 : path to filtered_plot QC imformation dir
+# alignment_stats : path to alignment_stats report txt file.
+# gene_abundance : path to gene_abundance tsv file.
+# basecall : path to  basecall summary tsv file. .
+# report_dir : path of new diroctory to store the results.
+
+---
+
+3. eventalign.sh:
+index fast5 to fastq with nanopolish index tool and run nanopolish for fastq files to compute an improved consensus sequence from the draft genome assembly produced by minimap2, thus, get the signal.
+Input: a combined nanopore fastq file , a file folder containing nanopore files in fast5 format and a reference genome fa file
+Output: a summary file in format sum and a output txt file
+Usage
+Run the following in the container
+./scripts/eventalign.sh <fq> <fast5dir> <sortedBam> <ref> <npsummary> <nThreads> <np_out>
+# fq: a combined fastq file.
+# fast5dir: Path of a file folder containing nanopore files in fast5 format.
+# sortedBam: a sorted bam file.
+# ref : reference genome fa file
+# nThreads : number of threads.
+# npsummary : name of merged summary file .
+# np_out : name of output txt file.
+
+---
+
+1. methy_iden.sh:
+ Do modified basecalling from nanopore pod5 files. 
+Input : a file folder containing nanopore files in fast5/pod5 format and a reference genome fa file
+Output : a bam file.
+Usage
+Run the following in the container
+./scripts/methy_iden.sh <pod5dir> <ref> <out>
+# pod5dir: Path of a file folder containing nanopore files in fast5/pod5 format.
+# ref : reference genome fa file
+# out : name of output bam file.
+
+---
+
+IF you: Please use this data to do complete quantitative analysis for nanopore files. Each step of the process has been organized into specific executable scripts(13 steps). The bash tool is used. All the scripts are in the folder ./scripts/. The steps must be generated in strict order.
+
+---
+
+To extract signal from nanopore files. Each step of the process has been organized into specific executable scripts. The bash tool is used. All the scripts are in the folder ./scripts/. The steps must be generated in strict order.
+
+---
+
+IF you: Please use this data to identify methylation from nanopore files. Each step of the process has been organized into specific executable scripts(2 steps). The bash tool is used. All the scripts are in the folder ./scripts/. The steps must be generated in strict order.

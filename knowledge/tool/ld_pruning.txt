@@ -1,0 +1,18 @@
+        {
+            "step_number": 2,
+            "description": "Perform linkage disequilibrium (LD) pruning to reduce correlation between SNPs before kinship analysis. This step uses a sliding window approach to identify and remove SNPs in high LD, typically using parameters like window size 50kb, step size 5, and r\u00b2 threshold 0.5. This ensures independent markers for accurate relatedness estimation.",
+            "input_filename": [
+                "./output/019/filtered_1000GP.bed: filtered plink bed file with high-quality biallelic SNPs",
+                "./output/019/filtered_1000GP.bim: filtered plink bim file with high-quality biallelic SNPs",
+                "./output/019/filtered_1000GP.fam: filtered plink fam file with high-quality biallelic SNPs"
+            ],
+            "output_filename": [
+                "./output/019/ld_pruned_1000GP.bed: LD-pruned plink bed file for kinship analysis",
+                "./output/019/ld_pruned_1000GP.bim: LD-pruned plink bim file for kinship analysis",
+                "./output/019/ld_pruned_1000GP.fam: LD-pruned plink fam file for kinship analysis"
+            ],
+            "tools": "PLINK"
+        },
+
+plink --bfile ./output/019/filtered_1000GP --indep-pairwise 50 5 0.5 --out ./output/019/ld_prune_temp
+plink --bfile ./output/019/filtered_1000GP --extract ./output/019/ld_prune_temp.prune.in --make-bed --out ./output/019/ld_pruned_1000GP

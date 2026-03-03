@@ -1,0 +1,57 @@
+pixy - Population Genetics Summary Statistics from VCF
+======================================================
+
+pixy calculates pi (nucleotide diversity), dxy (absolute divergence),
+and FST correctly handling missing data and invariant sites.
+
+## Installation
+conda install -c conda-forge pixy
+
+## Key Feature
+Unlike VCFtools, pixy correctly handles missing data by computing statistics
+only from sites where data is available, avoiding bias from missing genotypes.
+REQUIRES all-sites VCF (including invariant sites).
+
+## Usage
+
+### Nucleotide Diversity (pi)
+pixy --stats pi \
+     --vcf all_sites.vcf.gz \
+     --populations pop_file.txt \
+     --window_size 10000 \
+     --n_cores 4 \
+     --output_prefix pi_results
+
+### Absolute Divergence (dxy)
+pixy --stats dxy \
+     --vcf all_sites.vcf.gz \
+     --populations pop_file.txt \
+     --window_size 10000 \
+     --n_cores 4 \
+     --output_prefix dxy_results
+
+### FST
+pixy --stats fst \
+     --vcf all_sites.vcf.gz \
+     --populations pop_file.txt \
+     --window_size 10000 \
+     --n_cores 4 \
+     --output_prefix fst_results
+
+### All statistics at once
+pixy --stats pi fst dxy \
+     --vcf all_sites.vcf.gz \
+     --populations pop_file.txt \
+     --window_size 10000 \
+     --n_cores 4 \
+     --output_prefix all_stats
+
+## Population File Format (tab-separated)
+# sample_name    population
+# HG00096        GBR
+# NA18525        CHB
+
+## Output
+- _pi.txt: Windowed nucleotide diversity per population
+- _dxy.txt: Windowed absolute divergence per population pair
+- _fst.txt: Windowed FST per population pair

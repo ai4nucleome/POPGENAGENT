@@ -1,0 +1,33 @@
+const base_url = "http://localhost:8000"
+
+
+export default {
+    get_all_ids : base_url+"/api/sessions/",
+    delete_session : base_url+"/api/sessions/id/delete_session/",
+    create_session : base_url+"/api/sessions/create/",
+    update_session_title: base_url+"/api/sessions/id/update_title/",
+    get_chat_info : base_url+"/get_chat_history/",
+    run_chat : base_url+"/run_chat/",
+    stop_task : base_url+"/stop_task/",
+    get_execute_files: base_url+"/api/files/",
+    update_execute_file_description: base_url+"/api/files/update_description/",
+    get_execute_info : base_url+"/api/execute_history/id/",
+    run_plan : base_url+"/run_plan/",
+    update_plan: base_url+"/update_plan/",
+    execute_plan: base_url+"/execute_plan/",
+    stop_plan: base_url+"/stop_plan/",
+    update_step: base_url+"/update_step/", 
+    generate_report: base_url+"/api/sessions/id/generate_report/",
+    get_analysis_files: base_url+"/api/files/",
+    update_analysis_file_description: base_url+"/api/files/update_description/",
+    get_analysis_info : base_url+"/api/sessions/id/analysis_history/",
+    run_analysis : base_url+"/run_analysis/",
+    get_initial_settings : base_url+"/get_initial_settings/",
+    update_settings : base_url+"/update_settings/",
+    get_doc_files : base_url+"/get_doc_files/",
+    update_doc_files : base_url+"/update_doc_files/",
+    get_tools_files : base_url+"/get_tools_files/",
+    upload_tool_file : base_url+"/upload_tool_file/",
+    delete_tool_file : base_url+"/delete_tool_file/",
+    upload_file_from_google_drive : base_url+"/upload_file/",
+}

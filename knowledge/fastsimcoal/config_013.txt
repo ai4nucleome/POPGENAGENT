@@ -1,0 +1,3 @@
+ten populations of JPT,IBS,CHB，ACB,GBR,CHS,CHB,CEU,STU and MSL., Create a ten-population demographic model to analyze population divergence and infer demographic parameters.
+
+./fsc28 -t ./output/013/ana/simulation.tpl -e ./output/013/ana/simulation.est -n 100000 -d -M -L 40 -q -0 -x -I -X -Y

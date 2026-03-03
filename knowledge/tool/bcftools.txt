@@ -1,0 +1,43 @@
+BCFtools - VCF/BCF Manipulation and Variant Calling
+====================================================
+
+BCFtools is a high-performance toolkit for manipulating VCF and BCF files.
+
+## Installation
+conda install -c bioconda bcftools
+
+## Key Operations
+
+### View and Query
+bcftools view input.vcf.gz                           # View VCF
+bcftools view -s sample1,sample2 input.vcf.gz        # Extract samples
+bcftools view -r chr1:1000-2000 input.vcf.gz         # Extract region
+bcftools view -i 'QUAL>30 && DP>10' input.vcf.gz     # Filter by expression
+bcftools view --min-af 0.05 --max-af 0.95 input.vcf.gz  # Filter by AF
+
+### Statistics
+bcftools stats input.vcf.gz > stats.txt
+bcftools stats -s - input.vcf.gz > per_sample_stats.txt
+plot-vcfstats stats.txt -p plots/
+
+### Filtering
+bcftools filter -i 'QUAL>30 && INFO/DP>10' input.vcf.gz -o filtered.vcf.gz
+bcftools view -m2 -M2 -v snps input.vcf.gz -o biallelic_snps.vcf.gz  # Biallelic SNPs only
+
+### Annotation and Manipulation
+bcftools annotate -x INFO/DP,FORMAT/AD input.vcf.gz    # Remove fields
+bcftools norm -m -any input.vcf.gz                      # Split multiallelic
+bcftools merge sample1.vcf.gz sample2.vcf.gz -o merged.vcf.gz
+bcftools concat chr1.vcf.gz chr2.vcf.gz -o combined.vcf.gz
+bcftools isec -p output_dir sample1.vcf.gz sample2.vcf.gz  # Intersection
+
+### Population Genetics
+# Allele frequency
+bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t%AF\n' input.vcf.gz
+
+# Per-sample genotype extraction
+bcftools query -f '%CHROM\t%POS[\t%GT]\n' input.vcf.gz
+
+### Indexing
+bcftools index input.vcf.gz          # CSI index
+bcftools index -t input.vcf.gz       # TBI index

@@ -1,0 +1,69 @@
+# Goal:  I want to construct a migration and separation model to go beyond Africa. Refer to the populations of YRI,CEU and CHB
+# Generated from output 023
+# Successfully validated
+
+demes:
+- description: Equilibrium/root population
+  epochs:
+  - end_time: 220000
+    start_size: 7300
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Anatomically modern humans
+  epochs:
+  - end_time: 140000
+    start_size: 12300
+  name: AMH
+- ancestors:
+  - AMH
+  description: Bottleneck out-of-Africa population
+  epochs:
+  - end_time: 21200
+    start_size: 2100
+  name: OOA
+- ancestors:
+  - AMH
+  description: Yoruba in Ibadan, Nigeria
+  epochs:
+  - end_time: 0
+    start_size: 12300
+  name: YRI
+- ancestors:
+  - OOA
+  description: Utah Residents (CEPH) with Northern and Western European Ancestry
+  epochs:
+  - end_size: 29725
+    end_time: 0
+    start_size: 1000
+  name: CEU
+- ancestors:
+  - OOA
+  description: Han Chinese in Beijing, China
+  epochs:
+  - end_size: 54090
+    end_time: 0
+    start_size: 510
+  name: CHB
+description: Out-of-Africa migration and separation model with YRI, CEU, and CHB populations
+doi:
+- https://doi.org/10.1371/journal.pgen.1000695
+generation_time: 25
+migrations:
+- demes:
+  - YRI
+  - OOA
+  rate: 0.00025
+- demes:
+  - YRI
+  - CEU
+  rate: 3.0e-05
+- demes:
+  - YRI
+  - CHB
+  rate: 1.9e-05
+- demes:
+  - CEU
+  - CHB
+  rate: 9.6e-05
+time_units: years

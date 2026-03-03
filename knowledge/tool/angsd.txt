@@ -1,0 +1,63 @@
+ANGSD - Analysis of Next Generation Sequencing Data
+====================================================
+
+ANGSD performs population genetics analyses directly from BAM/CRAM files
+without requiring hard-called genotypes. Ideal for low-coverage data.
+
+## Installation
+conda install -c bioconda angsd
+
+## Key Analyses
+
+### Allele Frequencies (from BAM files directly)
+angsd -bam bam_list.txt -GL 1 -doMaf 1 -doMajorMinor 1 \
+      -SNP_pval 1e-6 -minMapQ 20 -minQ 20 -nThreads 8 -out results
+
+### Site Frequency Spectrum (SFS)
+# Step 1: Estimate SFS
+angsd -bam pop1_bams.txt -doSaf 1 -GL 1 -anc ancestral.fa -nThreads 8 -out pop1
+realSFS pop1.saf.idx > pop1.sfs
+
+# Step 2: 2D SFS for FST
+angsd -bam pop1_bams.txt -doSaf 1 -GL 1 -anc ancestral.fa -out pop1
+angsd -bam pop2_bams.txt -doSaf 1 -GL 1 -anc ancestral.fa -out pop2
+realSFS pop1.saf.idx pop2.saf.idx > pop1_pop2.2dsfs
+
+### FST Estimation
+realSFS fst index pop1.saf.idx pop2.saf.idx -sfs pop1_pop2.2dsfs -fstout fst_results
+realSFS fst stats fst_results.fst.idx                        # Global FST
+realSFS fst stats2 fst_results.fst.idx -win 50000 -step 25000 -type 2  # Windowed FST
+
+### Nucleotide Diversity (theta)
+# Step 1: Get per-site thetas
+angsd -bam bam_list.txt -doSaf 1 -GL 1 -anc ancestral.fa -out results
+realSFS results.saf.idx > results.sfs
+angsd -bam bam_list.txt -doThetas 1 -doSaf 1 -GL 1 -anc ancestral.fa -pest results.sfs -out results
+
+# Step 2: Window-based statistics
+thetaStat do_stat results.thetas.idx -win 50000 -step 25000 -outnames theta_windows
+# Output includes: Watterson's theta, pairwise theta (pi), Tajima's D
+
+### PCA (from genotype likelihoods)
+angsd -bam bam_list.txt -GL 1 -doGlf 2 -doMajorMinor 1 -doMaf 1 \
+      -SNP_pval 1e-6 -nThreads 8 -out pca_input
+# Then use PCAngsd:
+pcangsd -b pca_input.beagle.gz -o pca_output -t 8
+
+### Heterozygosity
+angsd -bam sample.bam -doSaf 1 -GL 1 -anc ancestral.fa -out sample
+realSFS sample.saf.idx > sample.sfs
+# Heterozygosity = sfs[1] / sum(sfs)
+
+### Association Testing
+angsd -bam bam_list.txt -GL 1 -doMaf 1 -doMajorMinor 1 -doAsso 1 \
+      -yBin phenotype.txt -out assoc_results
+
+## Key Parameters
+-GL 1              Genotype likelihood model (1=SAMtools, 2=GATK)
+-doMaf 1           Estimate allele frequencies
+-doMajorMinor 1    Infer major/minor alleles
+-SNP_pval 1e-6     P-value threshold for SNP calling
+-minMapQ 20        Minimum mapping quality
+-minQ 20           Minimum base quality
+-nThreads 8        Number of threads

@@ -1,0 +1,85 @@
+qpAdm & qpGraph (Admixtools2) - Admixture Modeling
+====================================================
+
+Advanced methods for testing admixture hypotheses and fitting admixture graphs.
+
+## Installation (R package)
+```r
+# Install admixtools2
+remotes::install_github("uqrmaie1/admixtools")
+library(admixtools)
+```
+
+## qpAdm - Admixture Proportion Estimation
+
+Tests whether a target population can be modeled as a mixture of source populations,
+using a set of outgroup ("right") populations.
+
+```r
+library(admixtools)
+
+prefix <- "./output/095/ld_pruned2"
+
+# Define target, sources, and outgroups
+target <- "CLM"
+left <- c("CEU", "YRI")           # Source populations
+right <- c("CHB", "JPT", "GWD")   # Outgroup populations
+
+# Run qpAdm
+result <- qpadm(prefix, target, left, right)
+print(result$weights)   # Admixture proportions
+print(result$popdrop)   # Model fit (p-value)
+# p > 0.05: model is adequate
+# p < 0.05: model does not fit well
+
+# Try different source combinations
+result2 <- qpadm(prefix, "PUR", c("CEU", "YRI", "CHB"), c("GWD", "JPT", "IBS"))
+```
+
+## qpGraph - Admixture Graph Fitting
+
+Fits a user-specified admixture graph to f-statistics.
+
+```r
+# Define graph topology
+graph <- "
+(root,
+  (ANC_AFR,
+    YRI,
+    (OOA,
+      (EUR_ANC, CEU, (ADMIX, 0.7, EUR_ANC, 0.3, AFR_ANC)),
+      CHB
+    )
+  )
+)
+"
+
+# Fit graph
+result <- qpgraph(prefix, graph)
+print(result$score)       # Likelihood score
+print(result$f3_residuals) # Residual fit
+
+# Automated graph search
+best_graph <- find_graphs(prefix, 
+                          pops = c("YRI", "CEU", "CHB", "CLM"),
+                          nrep = 100,
+                          numadmix = 1)
+```
+
+## F-Statistics Quick Reference
+
+```r
+# F2: genetic drift between two populations
+f2_result <- f2(prefix, maxmiss=0.1)
+
+# F3: test for admixture
+# Negative F3 with Z < -3 indicates admixture
+f3_result <- f3(prefix, "CLM", "CEU", "YRI")
+
+# F4 (D-statistic): test for gene flow
+# |Z| > 3 indicates significant gene flow
+f4_result <- f4(prefix, "CEU", "CHB", "YRI", "GWD")
+
+# F4-ratio: estimate admixture proportion
+f4ratio_result <- f4ratio(prefix, "CLM", "CEU", "YRI", "CHB", "GWD")
+```

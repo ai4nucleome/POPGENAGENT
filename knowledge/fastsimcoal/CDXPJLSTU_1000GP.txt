@@ -1,0 +1,19 @@
+This is the obs file for the three populations,which are ESN,CLM,CEU from 1000GP. I hope to build a migration and separation model based on this obs file.
+
+#!/bin/bash
+set -e  # Exit on error
+
+# ---- Copy and rename obs file for fastsimcoal ----
+cp -f ./data/CDXPJLSTU_1000GP_MSFS.obs ./CDXPJLSTU_1000GP_jointMAFpop1_0.obs
+
+# ---- Run fastsimcoal ----
+./fsc28 -t ./output/043/ana/CDXPJLSTU_1000GP.tpl \
+        -e ./output/043/ana/CDXPJLSTU_1000GP.est \
+        -m -M -n 100000 -L 40 -q -0 -x -I -X -Y
+
+# ---- Clean up temporary obs ----
+rm -f ./CDXPJLSTU_1000GP_jointMAFpop1_0.obs
+
+# ---- Move output files ----
+mkdir -p ./output/043/ana
+mv -f CDXPJLSTU_1000GP* ./output/043/ana/

@@ -1,0 +1,264 @@
+        {
+            "step_number": 11,
+            "description": "Perform formal tests of admixture using Admixtools, including F3 statistics to detect admixture and D-statistics (ABBA-BABA tests) to detect gene flow. These statistics provide rigorous tests for population mixture and introgression events among the 26 populations, complementing the visual results from PCA and ADMIXTURE analyses.",
+            "input_filename": [
+                "./output/009/final_ld_pruned_1000GP.bed: stringently LD-pruned genotype data",
+                "./output/009/final_ld_pruned_1000GP.bim: stringently LD-pruned variant information",
+                "./output/009/final_ld_pruned_1000GP.fam: stringently LD-pruned sample information"
+            ],
+            "output_filename": [
+                "./output/009/admixtools_f3_results.txt: F3 statistics testing for admixture",
+                "./output/009/admixtools_d_statistics.txt: D-statistics testing for gene flow",
+                "./output/009/admixtools_summary_report.txt: summary of significant admixture signals"
+            ],
+            "tools": "Admixtools"
+        }
+
+cat << 'EOF' > ./output/009/admixtools_analysis.R
+# Load required libraries
+library(admixtools)
+
+# Set paths
+input_prefix <- "./output/009/final_ld_pruned_1000GP"
+output_dir <- "./output/009"
+
+# Read population information from fam file
+fam_data <- read.table(paste0(input_prefix, ".fam"), header = FALSE, stringsAsFactors = FALSE)
+colnames(fam_data) <- c("FID", "IID", "FatherID", "MotherID", "Sex", "Phenotype")
+
+# Extract unique populations from FID (assuming FID contains population codes)
+populations <- unique(fam_data$FID)
+print(paste("Total populations:", length(populations)))
+print("Populations:")
+print(populations)
+
+# Initialize results storage
+f3_results <- data.frame()
+d_results <- data.frame()
+
+# Function to run F3 statistics
+# F3(Target; Source1, Source2) tests if Target is admixed from Source1 and Source2
+run_f3_tests <- function(prefix, populations) {
+  results_list <- list()
+  
+  # For each population as potential target
+  for (target in populations) {
+    # Test all pairs of other populations as sources
+    other_pops <- populations[populations != target]
+    
+    for (i in 1:(length(other_pops)-1)) {
+      for (j in (i+1):length(other_pops)) {
+        source1 <- other_pops[i]
+        source2 <- other_pops[j]
+        
+        tryCatch({
+          # Calculate F3 statistic
+          f3_result <- f3(prefix, target, source1, source2)
+          
+          # Store result
+          result_row <- data.frame(
+            Target = target,
+            Source1 = source1,
+            Source2 = source2,
+            f3 = f3_result$est,
+            se = f3_result$se,
+            z_score = f3_result$z,
+            p_value = 2 * pnorm(-abs(f3_result$z))
+          )
+          
+          results_list[[length(results_list) + 1]] <- result_row
+        }, error = function(e) {
+          cat(paste("Error in F3 test for", target, source1, source2, ":", e$message, "\n"))
+        })
+      }
+    }
+  }
+  
+  # Combine all results
+  if (length(results_list) > 0) {
+    return(do.call(rbind, results_list))
+  } else {
+    return(data.frame())
+  }
+}
+
+# Function to run D-statistics (f4 tests)
+# f4(W, X; Y, Z) tests for gene flow
+run_d_tests <- function(prefix, populations) {
+  results_list <- list()
+  
+  # Select diverse outgroups (typically African populations are used as outgroups)
+  african_pops <- c("YRI", "LWK", "GWD", "MSL", "ESN", "ACB", "ASW")
+  outgroups <- populations[populations %in% african_pops]
+  
+  if (length(outgroups) == 0) {
+    # If no African populations, use first population as outgroup
+    outgroups <- populations[1]
+  }
+  
+  # Test different population quartets
+  for (outgroup in outgroups) {
+    other_pops <- populations[populations != outgroup]
+    
+    # Test various combinations
+    for (i in 1:(length(other_pops)-2)) {
+      for (j in (i+1):(length(other_pops)-1)) {
+        for (k in (j+1):length(other_pops)) {
+          popA <- other_pops[i]
+          popB <- other_pops[j]
+          popC <- other_pops[k]
+          
+          tryCatch({
+            # Calculate D-statistic using f4
+            d_result <- f4(prefix, popA, popB, popC, outgroup, f4mode = FALSE)
+            
+            # Store result
+            result_row <- data.frame(
+              PopA = popA,
+              PopB = popB,
+              PopC = popC,
+              Outgroup = outgroup,
+              D_statistic = d_result$est,
+              se = d_result$se,
+              z_score = d_result$z,
+              p_value = 2 * pnorm(-abs(d_result$z))
+            )
+            
+            results_list[[length(results_list) + 1]] <- result_row
+          }, error = function(e) {
+            cat(paste("Error in D-test for", popA, popB, popC, outgroup, ":", e$message, "\n"))
+          })
+        }
+      }
+    }
+  }
+  
+  # Combine all results
+  if (length(results_list) > 0) {
+    return(do.call(rbind, results_list))
+  } else {
+    return(data.frame())
+  }
+}
+
+# Run F3 tests
+cat("\nRunning F3 admixture tests...\n")
+f3_results <- run_f3_tests(input_prefix, populations)
+
+# Sort by significance
+if (nrow(f3_results) > 0) {
+  f3_results <- f3_results[order(f3_results$z_score), ]
+  
+  # Save F3 results
+  write.table(f3_results, 
+              file = file.path(output_dir, "admixtools_f3_results.txt"),
+              sep = "\t", row.names = FALSE, quote = FALSE)
+  
+  cat("\nTop 10 most significant F3 tests (negative F3 indicates admixture):\n")
+  print(head(f3_results[f3_results$f3 < 0, ], 10))
+}
+
+# Run D-statistics tests
+cat("\n\nRunning D-statistics (ABBA-BABA) tests...\n")
+d_results <- run_d_tests(input_prefix, populations)
+
+# Sort by absolute z-score
+if (nrow(d_results) > 0) {
+  d_results <- d_results[order(abs(d_results$z_score), decreasing = TRUE), ]
+  
+  # Save D-statistics results
+  write.table(d_results,
+              file = file.path(output_dir, "admixtools_d_statistics.txt"),
+              sep = "\t", row.names = FALSE, quote = FALSE)
+  
+  cat("\nTop 10 most significant D-statistics (|Z| > 3 indicates significant gene flow):\n")
+  print(head(d_results[abs(d_results$z_score) > 3, ], 10))
+}
+
+# Create summary report
+cat("\n\nGenerating summary report...\n")
+
+summary_lines <- c(
+  "ADMIXTOOLS ANALYSIS SUMMARY REPORT",
+  "==================================",
+  paste("Analysis Date:", Sys.Date()),
+  paste("Total Populations Analyzed:", length(populations)),
+  "",
+  "POPULATIONS:",
+  paste(populations, collapse = ", "),
+  "",
+  "F3 ADMIXTURE TESTS",
+  "------------------"
+)
+
+if (nrow(f3_results) > 0) {
+  significant_f3 <- f3_results[f3_results$f3 < 0 & f3_results$p_value < 0.05, ]
+  summary_lines <- c(summary_lines,
+    paste("Total F3 tests performed:", nrow(f3_results)),
+    paste("Significant admixture signals (negative F3, p < 0.05):", nrow(significant_f3)),
+    "",
+    "Top admixture signals:"
+  )
+  
+  if (nrow(significant_f3) > 0) {
+    for (i in 1:min(10, nrow(significant_f3))) {
+      summary_lines <- c(summary_lines,
+        paste(sprintf("%d. %s: admixed from %s and %s (F3 = %.4f, Z = %.2f, p = %.4f)",
+                      i, significant_f3$Target[i], significant_f3$Source1[i], 
+                      significant_f3$Source2[i], significant_f3$f3[i],
+                      significant_f3$z_score[i], significant_f3$p_value[i])))
+    }
+  } else {
+    summary_lines <- c(summary_lines, "No significant admixture signals detected.")
+  }
+}
+
+summary_lines <- c(summary_lines,
+  "",
+  "D-STATISTICS (ABBA-BABA TESTS)",
+  "-------------------------------"
+)
+
+if (nrow(d_results) > 0) {
+  significant_d <- d_results[abs(d_results$z_score) > 3, ]
+  summary_lines <- c(summary_lines,
+    paste("Total D-statistics tests performed:", nrow(d_results)),
+    paste("Significant gene flow signals (|Z| > 3):", nrow(significant_d)),
+    "",
+    "Top gene flow signals:"
+  )
+  
+  if (nrow(significant_d) > 0) {
+    for (i in 1:min(10, nrow(significant_d))) {
+      gene_flow_dir <- ifelse(significant_d$D_statistic[i] > 0, 
+                              paste(significant_d$PopC[i], "->", significant_d$PopA[i]),
+                              paste(significant_d$PopC[i], "->", significant_d$PopB[i]))
+      summary_lines <- c(summary_lines,
+        paste(sprintf("%d. Gene flow: %s (D = %.4f, Z = %.2f, p = %.4f)",
+                      i, gene_flow_dir, significant_d$D_statistic[i],
+                      significant_d$z_score[i], significant_d$p_value[i])))
+    }
+  } else {
+    summary_lines <- c(summary_lines, "No significant gene flow signals detected.")
+  }
+}
+
+summary_lines <- c(summary_lines,
+  "",
+  "INTERPRETATION GUIDE:",
+  "--------------------",
+  "F3 Statistics: Negative values with p < 0.05 indicate admixture",
+  "D-Statistics: |Z| > 3 indicates significant gene flow",
+  "  - Positive D: gene flow from C to A (or shared drift)",
+  "  - Negative D: gene flow from C to B (or shared drift)"
+)
+
+# Write summary report
+writeLines(summary_lines, file.path(output_dir, "admixtools_summary_report.txt"))
+
+cat("\nAnalysis complete! Results saved to:\n")
+cat("- F3 statistics: ./output/009/admixtools_f3_results.txt\n")
+cat("- D-statistics: ./output/009/admixtools_d_statistics.txt\n")
+cat("- Summary report: ./output/009/admixtools_summary_report.txt\n")
+EOF
+Rscript ./output/009/admixtools_analysis.R

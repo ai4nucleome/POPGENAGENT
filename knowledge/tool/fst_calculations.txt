@@ -1,0 +1,75 @@
+FST Calculation Methods and Tools
+==================================
+
+## Overview
+FST (Fixation Index) measures genetic differentiation between populations.
+Range: 0 (no differentiation) to 1 (complete differentiation).
+- FST < 0.05: Little differentiation
+- 0.05 < FST < 0.15: Moderate differentiation
+- 0.15 < FST < 0.25: Great differentiation
+- FST > 0.25: Very great differentiation
+
+## Methods
+
+### 1. PLINK (Weir-Cockerham)
+# Pairwise FST between two populations
+plink --bfile input --fst --within clusters.txt --out fst_results
+# clusters.txt format: FID IID CLUSTER
+
+# PLINK2 (Hudson's FST)
+plink2 --bfile input --fst POP --pheno pop_file.txt --out fst_results
+
+### 2. VCFtools (Weir-Cockerham)
+# Genome-wide FST
+vcftools --vcf input.vcf --weir-fst-pop pop1.txt --weir-fst-pop pop2.txt --out fst
+
+# Windowed FST
+vcftools --vcf input.vcf --weir-fst-pop pop1.txt --weir-fst-pop pop2.txt \
+         --fst-window-size 50000 --fst-window-step 25000 --out windowed_fst
+
+### 3. GCTA
+gcta64 --bfile input --fst --sub-pop pop_groups.txt --out fst_results
+
+### 4. ANGSD (from BAM files directly)
+# Step 1: Compute per-population SAF
+angsd -bam pop1.bamlist -doSaf 1 -GL 1 -anc ancestral.fa -out pop1
+angsd -bam pop2.bamlist -doSaf 1 -GL 1 -anc ancestral.fa -out pop2
+
+# Step 2: Compute 2D SFS
+realSFS pop1.saf.idx pop2.saf.idx > pop1_pop2.2dsfs
+
+# Step 3: Compute FST
+realSFS fst index pop1.saf.idx pop2.saf.idx -sfs pop1_pop2.2dsfs -fstout fst_output
+realSFS fst stats fst_output.fst.idx                           # Global FST
+realSFS fst stats2 fst_output.fst.idx -win 50000 -step 25000  # Windowed FST
+
+### 5. Python (scikit-allel)
+```python
+import allel
+import numpy as np
+
+# Load genotype data
+callset = allel.read_vcf('input.vcf.gz')
+gt = allel.GenotypeArray(callset['calldata/GT'])
+
+# Define population indices
+pop1_idx = [0, 1, 2, 3, 4]    # indices of pop1 samples
+pop2_idx = [5, 6, 7, 8, 9]    # indices of pop2 samples
+
+# Calculate allele counts
+ac1 = gt.count_alleles(subpop=pop1_idx)
+ac2 = gt.count_alleles(subpop=pop2_idx)
+
+# Hudson's FST
+fst, se, _, _ = allel.hudson_fst(ac1, ac2)
+print(f'Mean FST = {np.nanmean(fst):.4f}')
+
+# Windowed FST
+pos = callset['variants/POS']
+fst_windowed, windows, counts = allel.windowed_hudson_fst(pos, ac1, ac2, size=50000, step=25000)
+```
+
+## Interpretation
+- Compare pairwise FST to identify most/least differentiated population pairs
+- Windowed FST can identify regions under divergent selection (outlier loci)
+- Use with caution for small sample sizes (high variance)

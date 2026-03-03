@@ -1,0 +1,172 @@
+        {
+            "step_number": 4,
+            "description": "Calculate basic population genetic statistics including runs of homozygosity (ROH) to assess inbreeding patterns, LD decay curves to understand the extent of linkage disequilibrium across the genome, and heterozygosity rates to measure genetic diversity within each of the 26 populations. These metrics provide fundamental insights into the genetic characteristics of each population.",
+            "input_filename": [
+                "./output/001/unrelated_1000GP.bed: plink bed file with unrelated individuals only",
+                "./output/001/unrelated_1000GP.bim: plink bim file with unrelated individuals only",
+                "./output/001/unrelated_1000GP.fam: plink fam file with unrelated individuals only"
+            ],
+            "output_filename": [
+                "./output/001/roh_segments.hom: runs of homozygosity segments for each individual",
+                "./output/001/roh_summary.hom.summary: summary statistics of ROH per individual",
+                "./output/001/ld_decay_data.ld: linkage disequilibrium decay statistics",
+                "./output/001/heterozygosity_stats.het: heterozygosity rates per individual",
+                "./output/001/basic_stats_summary.txt: comprehensive summary of basic genetic statistics"
+            ],
+            "tools": "PLINK, Python"
+        },
+
+cat << 'EOF' > ./output/001/analyze_population_stats.py
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import os
+
+# Read the FAM file to get population information
+fam_df = pd.read_csv('./output/001/final_pruned_1000GP.fam', sep='\s+', header=None, 
+                     names=['FID', 'IID', 'PID', 'MID', 'SEX', 'PHENO'])
+
+# Extract population from FID (assuming format like HG00096_CEU)
+fam_df['POP'] = fam_df['FID'].str.split('_').str[-1]
+
+# Read ROH data
+roh_df = pd.read_csv('./output/001/roh_segments.hom', sep='\s+')
+roh_indiv_df = pd.read_csv('./output/001/roh_segments.hom.indiv', sep='\s+')
+
+# Read heterozygosity data
+het_df = pd.read_csv('./output/001/heterozygosity_stats.het', sep='\s+')
+
+# Read LD decay data
+ld_df = pd.read_csv('./output/001/ld_decay_data.ld', sep='\s+')
+
+# Merge population information
+roh_indiv_df = roh_indiv_df.merge(fam_df[['FID', 'IID', 'POP']], on=['FID', 'IID'])
+het_df = het_df.merge(fam_df[['FID', 'IID', 'POP']], on=['FID', 'IID'])
+
+# Calculate population-level ROH statistics
+pop_roh_stats = roh_indiv_df.groupby('POP').agg({
+    'NSEG': ['mean', 'std'],
+    'KB': ['mean', 'std'],
+    'KBAVG': ['mean', 'std']
+}).round(2)
+
+# Calculate population-level heterozygosity statistics
+pop_het_stats = het_df.groupby('POP').agg({
+    'F': ['mean', 'std'],
+    'O(HOM)': ['mean', 'std'],
+    'E(HOM)': ['mean', 'std']
+}).round(4)
+
+# Create visualizations
+fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+
+# 1. ROH segments per population
+ax1 = axes[0, 0]
+roh_indiv_df.boxplot(column='NSEG', by='POP', ax=ax1, rot=90)
+ax1.set_title('Number of ROH Segments by Population')
+ax1.set_xlabel('Population')
+ax1.set_ylabel('Number of ROH Segments')
+
+# 2. Total ROH length per population
+ax2 = axes[0, 1]
+roh_indiv_df.boxplot(column='KB', by='POP', ax=ax2, rot=90)
+ax2.set_title('Total ROH Length (KB) by Population')
+ax2.set_xlabel('Population')
+ax2.set_ylabel('Total ROH Length (KB)')
+
+# 3. Inbreeding coefficient F per population
+ax3 = axes[1, 0]
+het_df.boxplot(column='F', by='POP', ax=ax3, rot=90)
+ax3.set_title('Inbreeding Coefficient (F) by Population')
+ax3.set_xlabel('Population')
+ax3.set_ylabel('Inbreeding Coefficient (F)')
+
+# 4. LD decay curve (overall, not per population)
+ax4 = axes[1, 1]
+if len(ld_df) > 0:
+    # Calculate distance bins
+    ld_df['DIST'] = abs(ld_df['BP_B'] - ld_df['BP_A'])
+    ld_df = ld_df[ld_df['DIST'] <= 500000]  # Focus on first 500kb
+    
+    # Bin the data
+    bins = np.arange(0, 500001, 10000)
+    ld_df['BIN'] = pd.cut(ld_df['DIST'], bins)
+    
+    # Calculate mean r2 per bin
+    r2_col = 'R2' if 'R2' in ld_df.columns else 'R^2'
+    ld_summary = ld_df.groupby('BIN')[r2_col].agg(['mean', 'count']).reset_index()
+    ld_summary['BIN_MID'] = ld_summary['BIN'].apply(lambda x: x.mid)
+    
+    # Plot LD decay
+    ax4.plot(ld_summary['BIN_MID'], ld_summary['mean'], 'o-')
+    ax4.set_xlabel('Distance (bp)')
+    ax4.set_ylabel('Mean r²')
+    ax4.set_title('LD Decay Curve')
+    ax4.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('./output/001/population_genetics_summary.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# Generate comprehensive summary report
+with open('./output/001/population_stats_summary.txt', 'w') as f:
+    f.write("# Population Genetic Statistics Summary\n")
+    f.write("=" * 80 + "\n\n")
+    
+    f.write("## Overview\n")
+    f.write(f"Total number of individuals: {len(fam_df)}\n")
+    f.write(f"Number of populations: {fam_df['POP'].nunique()}\n")
+    f.write(f"Populations analyzed: {sorted(fam_df['POP'].unique())}\n\n")
+    
+    f.write("## Runs of Homozygosity (ROH) Statistics by Population\n")
+    f.write("-" * 80 + "\n")
+    f.write(pop_roh_stats.to_string())
+    f.write("\n\n")
+    
+    f.write("## Heterozygosity and Inbreeding Statistics by Population\n")
+    f.write("-" * 80 + "\n")
+    f.write(pop_het_stats.to_string())
+    f.write("\n\n")
+    
+    f.write("## Overall Summary Statistics\n")
+    f.write("-" * 80 + "\n")
+    f.write(f"Mean number of ROH segments across all individuals: {roh_indiv_df['NSEG'].mean():.2f} ± {roh_indiv_df['NSEG'].std():.2f}\n")
+    f.write(f"Mean total ROH length (KB) across all individuals: {roh_indiv_df['KB'].mean():.2f} ± {roh_indiv_df['KB'].std():.2f}\n")
+    f.write(f"Mean inbreeding coefficient (F) across all individuals: {het_df['F'].mean():.4f} ± {het_df['F'].std():.4f}\n")
+    
+    if len(ld_df) > 0:
+        r2_col = 'R2' if 'R2' in ld_df.columns else 'R^2'
+        f.write(f"Mean LD (r²) across all SNP pairs: {ld_df[r2_col].mean():.4f}\n")
+    
+    f.write("\n## Population-specific insights\n")
+    f.write("-" * 80 + "\n")
+    
+    # Identify populations with high/low diversity
+    mean_f_by_pop = het_df.groupby('POP')['F'].mean().sort_values()
+    f.write(f"\nPopulations with lowest inbreeding (highest diversity):\n")
+    for pop in mean_f_by_pop.head(5).index:
+        f.write(f"  - {pop}: F = {mean_f_by_pop[pop]:.4f}\n")
+    
+    f.write(f"\nPopulations with highest inbreeding (lowest diversity):\n")
+    for pop in mean_f_by_pop.tail(5).index:
+        f.write(f"  - {pop}: F = {mean_f_by_pop[pop]:.4f}\n")
+    
+    # ROH patterns
+    mean_roh_by_pop = roh_indiv_df.groupby('POP')['KB'].mean().sort_values()
+    f.write(f"\nPopulations with lowest total ROH length:\n")
+    for pop in mean_roh_by_pop.head(5).index:
+        f.write(f"  - {pop}: {mean_roh_by_pop[pop]:.2f} KB\n")
+    
+    f.write(f"\nPopulations with highest total ROH length:\n")
+    for pop in mean_roh_by_pop.tail(5).index:
+        f.write(f"  - {pop}: {mean_roh_by_pop[pop]:.2f} KB\n")
+    
+    f.write("\n## Files Generated\n")
+    f.write("-" * 80 + "\n")
+    f.write("- population_genetics_summary.png: Visualization of population-level statistics\n")
+    f.write("- population_stats_summary.txt: This comprehensive summary report\n")
+    
+print("Population genetic statistics analysis completed successfully!")
+EOF
+python ./output/001/analyze_population_stats.py

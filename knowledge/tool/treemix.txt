@@ -1,0 +1,65 @@
+{
+            "step_number": 8,
+            "description": "Model historical migration events in genetic data using the TreeMix model, testing different numbers of migration edges (M=0 to M=5). This analysis will construct a population tree showing the relationships among the 26 populations and identify potential gene flow events that cannot be explained by a simple bifurcating tree model.",
+            "input_filename": [
+                "./output/030/final_ld_pruned_1000GP.bed: final LD-pruned PLINK bed file",
+                "./output/030/final_ld_pruned_1000GP.bim: final LD-pruned PLINK bim file",
+                "./output/030/final_ld_pruned_1000GP.fam: final LD-pruned PLINK fam file"
+            ],
+            "output_filename": [
+                "./output/030/treemix_tree.treeout.gz: population tree with migration edges",
+                "./output/030/treemix_residuals.txt: model residuals for assessing fit",
+                "./output/030/treemix_migration_graph.pdf: visualization of population tree with migration arrows"
+            ],
+            "tools": "TreeMix"
+        },
+
+conda install -y -c bioconda treemix
+bash ./scripts/bed2treemix.sh ./output/030/final_ld_pruned_1000GP
+cat << 'EOF' > ./output/030/run_treemix.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+FILE="./output/030/final_ld_pruned_1000GP"
+OUTGROUP="YRI"
+BOOTREPS=100
+BLOCK=10000
+
+for m in {0..5}; do
+  echo ">>> m=${m}"
+  treemix \
+    -i  "${FILE}.treemix.frq.gz" \
+    -m  "${m}" \
+    -o  "${FILE}.${m}" \
+    -root "${OUTGROUP}" \
+    -bootstrap \
+    -k "${BLOCK}" \
+    -noss \
+    >  "./output/030/treemix_${m}.log" 2>&1 || {
+      echo "[ERROR] Treemix failed for m=${m}. See treemix_${m}.log";
+      exit 1;
+    }
+done
+echo "All Treemix runs completed."
+EOF
+chmod +x ./output/030/run_treemix.sh
+bash ./output/030/run_treemix.sh
+Rscript ./scripts/plot_treemix.R ./output/030/final_ld_pruned_1000GP 5
+gzip ./output/030/final_ld_pruned_1000GP.0.treeout -c > ./output/030/treemix_tree.treeout.gz
+cat << 'EOF' > ./output/030/extract_residuals.R
+# Extract residuals from TreeMix runs
+residuals_list <- list()
+for (m in 0:5) {
+  cov_file <- paste0("./output/030/final_ld_pruned_1000GP.", m, ".cov.gz")
+  if (file.exists(cov_file)) {
+    cov_data <- read.table(gzfile(cov_file), header=FALSE)
+    residuals_list[[paste0("m", m)]] <- cov_data
+  }
+}
+if (length(residuals_list) > 0) {
+  write.table(data.frame(model=names(residuals_list), residual_sum=sapply(residuals_list, function(x) sum(abs(as.matrix(x)), na.rm=TRUE))),
+              file="./output/030/treemix_residuals.txt", sep="\t", quote=FALSE, row.names=FALSE)
+}
+EOF
+Rscript ./output/030/extract_residuals.R
+mv ./output/030/final_ld_pruned_1000GP.5_tree.pdf ./output/030/treemix_migration_graph.pdf

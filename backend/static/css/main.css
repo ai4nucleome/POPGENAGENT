@@ -1,0 +1,80 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fff;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    height: 98vh; /* Leave 5% blank space */
+    display: flex;
+    flex-direction: column;
+}
+.head {
+    background-color: rgba(245, 249, 255, 1);
+    padding-left: 2%;
+    color: #5293FA;
+    height: 7%;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.head-1 {
+    width: auto;
+    display: flex;
+    align-items: center;
+    margin-right: 10px; /* Add spacing */
+}
+
+.head-1 img {
+    width: 50px; /* Adjust image size */
+    height: auto;
+}
+
+.head-2 {
+    display: flex;
+    align-items: center;
+}
+
+
+
+.container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+    padding: 0%; /* Add 1% margin */
+    box-sizing: border-box;
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    }
+    /* Hint text styles */
+h3 {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* General button styles */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+    }
+    
+    button:hover {
+    background-color: #2980b9;
+    }
+    
+    

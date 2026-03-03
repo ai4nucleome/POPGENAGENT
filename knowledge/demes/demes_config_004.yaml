@@ -1,0 +1,33 @@
+# Goal: This is the obs file for the two populations,which are PEL and CDX from 1000GP. I hope to build a migration and separation model based on this obs file.
+# Generated from output 004
+# Successfully validated
+
+demes:
+- description: Ancestral population of PEL and CDX
+  epochs:
+  - end_time: 19096
+    start_size: 28586
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Peruvians from Lima, Peru
+  epochs:
+  - start_size: 31187
+  name: PEL
+- ancestors:
+  - ancestral
+  description: Chinese Dai in Xishuangbanna, China
+  epochs:
+  - start_size: 1232
+  name: CDX
+description: Migration and separation model for PEL and CDX populations from 1000
+  Genomes Project
+generation_time: 1
+migrations:
+- dest: CDX
+  rate: 0.000335278
+  source: PEL
+- dest: PEL
+  rate: 0.000335278
+  source: CDX
+time_units: generations

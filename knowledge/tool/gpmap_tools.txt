@@ -1,0 +1,205 @@
+ccgpmap-tools: Inference and Visualization of Genotype-Phenotype Maps
+====================================================================
+
+gpmap-tools is a Python library for inference, statistical analysis, and visualization
+of complex genotype-phenotype maps (fitness landscapes) containing up to millions of
+genotypes. It uses Gaussian process models to infer complete genotype-phenotype maps
+in the presence of genetic interactions (epistasis) of any order.
+
+Reference: Martí-Gómez et al. (2025) bioRxiv. doi:10.1101/2025.03.09.642267
+
+## Installation
+
+conda create -n gpmap python=3.8
+conda activate gpmap
+pip install gpmap-tools
+
+# Or from local source:
+cd /home/agent/POPGENAGENT/scripts/gpmap-tools-dev
+pip install .
+
+## Command-Line Tools
+
+### 1. VCregression — Variance Component Regression
+Fits a Gaussian process model to genotype-phenotype data using variance component regression.
+Estimates the magnitude of genetic interactions (epistasis) of different orders.
+
+Usage:
+  VCregression data.csv -o output.csv
+  VCregression data.csv -o output.csv -r                    # With regularization via CV
+  VCregression data.csv -o output.csv -p predict_seqs.csv   # Predict for new sequences
+  VCregression data.csv -o output.csv -p predict.csv --var   # Include posterior variance
+
+Input: CSV file with columns 'genotype' (sequence) and 'phenotype' (numeric value).
+Output: CSV file with fitted model results and predictions.
+
+### 2. SeqDEFT — Sequence Density Estimation using Field Theory
+Estimates sequence density from observed sequence counts (e.g., splice site diversity).
+
+Usage:
+  SeqDEFT sequences.txt -o output.csv
+  SeqDEFT sequences.txt -o output.csv -a 0.5              # Set hyperparameter
+  SeqDEFT sequences.txt -o output.csv -P 2                # Delta(P) operator order
+  SeqDEFT sequences.txt -o output.csv -y weights.txt      # With sequence weights
+  SeqDEFT sequences.txt -o output.csv -p "0,1,2,3"        # Select specific positions
+
+Input: Text file with one sequence per line (all same length).
+Output: CSV with inferred density for each genotype.
+
+### 3. calc_visualization — Compute Low-Dimensional Representation
+Calculates eigendecomposition of the rate matrix under a weak-mutation model
+to obtain coordinates for visualization of the fitness landscape.
+
+Usage:
+  calc_visualization landscape.csv -o viz_output -k 5
+  calc_visualization landscape.csv -o viz_output -k 5 -Ns 1.0     # Set population size
+  calc_visualization landscape.csv -o viz_output -k 5 -m 0.5      # Set mean fitness
+  calc_visualization landscape.csv -o viz_output -k 5 -e           # Also write edges
+  calc_visualization landscape.csv -o viz_output -C -c codon.csv   # Codon model
+
+Options:
+  -k N          Number of eigenvectors to compute (default: 5)
+  -Ns FLOAT     Scaled effective population size
+  -m FLOAT      Set Ns to reach this mean function at stationarity
+  -e            Write edge data for network visualization
+  -C            Use codon model for protein landscapes
+  -c FILE       Custom codon table (CSV)
+
+Input: CSV/Parquet file with 'genotype' (sequence) and 'function' (phenotype) columns.
+Output: Parquet file with genotype coordinates in low-dimensional space + NPZ edge file.
+
+### 4. plot_visualization — Plot Fitness Landscape
+Renders the low-dimensional representation computed by calc_visualization.
+
+Usage:
+  plot_visualization nodes.pq -o landscape_plot
+  plot_visualization nodes.pq -o landscape_plot -e edges.npz    # With edges
+  plot_visualization nodes.pq -o landscape_plot -b datashader    # Fast rendering for large data
+  plot_visualization nodes.pq -o landscape_plot -x 1 -y 2       # Select axes
+  plot_visualization nodes.pq -o landscape_plot -c function      # Color by phenotype
+
+Options:
+  -b BACKEND    Plotting backend: matplotlib, plotly, datashader (default: matplotlib)
+  -x, -y        Axes to plot (eigenvector indices, default: 1, 2)
+  -c COLUMN     Column to use for coloring (default: function)
+  -e FILE       Edge file for network visualization
+  -s FLOAT      Point size
+  --cmap NAME   Colormap name
+
+### 5. split_data — Split Data for Cross-Validation
+Splits genotype-phenotype data into training/test sets.
+
+Usage:
+  split_data data.csv -o split -n 5                # 5-fold CV
+  split_data data.csv -o split -n 5 --stratify     # Stratified split
+
+### 6. evaluate_split_fits — Evaluate Cross-Validation
+Evaluates prediction accuracy across cross-validation splits.
+
+Usage:
+  evaluate_split_fits split_prefix -o evaluation_results
+
+### 7. filter_genotypes — Filter Landscape Data
+Filters nodes and edges based on phenotype values or attributes.
+
+Usage:
+  filter_genotypes nodes.pq -o filtered -m 0.5               # Min value filter
+  filter_genotypes nodes.pq -o filtered -m 0.5 -M 1.0        # Min and max
+  filter_genotypes nodes.pq -o filtered -e edges.npz          # Also filter edges
+  filter_genotypes nodes.pq -o filtered -l "function"         # Filter by specific column
+
+### 8. plot_relaxation_times — Plot Evolutionary Decay Rates
+Visualizes relaxation times from the eigendecomposition.
+
+Usage:
+  plot_relaxation_times nodes.pq -o decay_plot
+
+## Python API
+
+### Basic Inference Workflow
+```python
+from gpmap.inference import VCregression
+from gpmap.utils import read_dataframe
+
+# Load data (CSV with 'genotype' and 'phenotype' columns)
+data = read_dataframe('data.csv')
+
+# Fit variance component regression model
+model = VCregression()
+model.fit(data)
+
+# Predict for all genotypes
+predictions = model.predict()
+
+# Predict with uncertainty
+predictions, variances = model.predict(calc_variance=True)
+
+# Get epistatic coefficients
+lambdas = model.lambdas  # Variance components by interaction order
+```
+
+### Visualization Workflow
+```python
+from gpmap.space import SequenceSpace
+from gpmap.randwalk import WMWalk
+from gpmap.utils import read_dataframe
+
+# Load inferred landscape
+data = read_dataframe('landscape.pq')
+
+# Create sequence space
+space = SequenceSpace(data)
+
+# Compute visualization coordinates
+walk = WMWalk(space, Ns=1.0)
+walk.calc_visualization(n_components=5)
+
+# Get coordinates
+coords = walk.get_nodes()  # DataFrame with v1, v2, ... columns
+
+# Plot using matplotlib
+from gpmap.plot.mpl import plot_nodes
+plot_nodes(coords, x='v1', y='v2', color='function', cmap='viridis')
+```
+
+### Summary Statistics
+```python
+from gpmap.summary import GPmapSummarizer
+
+# Compute epistasis summary statistics
+summarizer = GPmapSummarizer(data)
+summary = summarizer.calc_summary()
+
+# Variance explained by each order of epistasis
+variance_by_order = summarizer.calc_variance_components()
+```
+
+## Input Data Format
+
+CSV file with at minimum two columns:
+- genotype: DNA/protein sequence (all same length)
+- phenotype/function: numeric phenotypic value
+
+Example:
+```
+genotype,function
+ACGT,0.85
+ACGA,0.72
+ACCT,0.91
+ACCA,0.63
+```
+
+For SeqDEFT, input is a plain text file with one sequence per line:
+```
+ACGT
+ACGA
+ACGT
+ACCT
+```
+
+## Key Concepts
+- **Epistasis**: Non-additive genetic interactions between mutations
+- **Fitness landscape**: Mapping from genotype space to phenotype
+- **Variance components**: Decomposition of phenotypic variance by interaction order
+- **Weak mutation model**: Evolutionary model where mutations are rare relative to fixation
+- **Low-dimensional embedding**: Coordinates where distances reflect evolutionary accessibility

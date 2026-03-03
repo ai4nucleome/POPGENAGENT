@@ -1,0 +1,19 @@
+{
+            "step_number": 3,
+            "description": "Use KING tool to remove related individuals from genetic data, avoiding the influence of kinship on subsequent analyses. KING will identify pairs of related individuals based on kinship coefficients, and then PLINK will be used to extract only unrelated individuals based on the KING output. This ensures that population genetic analyses are not biased by family structure within populations.",
+            "input_filename": [
+                "./output/030/ld_pruned_1000GP.bed: LD-pruned PLINK bed file",
+                "./output/030/ld_pruned_1000GP.bim: LD-pruned PLINK bim file",
+                "./output/030/ld_pruned_1000GP.fam: LD-pruned PLINK fam file"
+            ],
+            "output_filename": [
+                "./output/030/unrelated_1000GP.bed: PLINK bed file with relatives removed",
+                "./output/030/unrelated_1000GP.bim: PLINK bim file with relatives removed",
+                "./output/030/unrelated_1000GP.fam: PLINK fam file with relatives removed"
+            ],
+            "tools": "KING, PLINK"
+        },
+
+king -b ./output/030/ld_pruned_1000GP.bed --related --prefix ./output/030/king_related
+awk 'NR>1 {print $2, $3}' ./output/030/king_related.kin0 > ./output/030/related_to_remove.txt
+plink --bfile ./output/030/ld_pruned_1000GP --remove ./output/030/related_to_remove.txt --make-bed --out ./output/030/unrelated_1000GP

@@ -1,0 +1,19 @@
+// Priors and rules file
+// *********************
+
+[PARAMETERS]
+//#isInt? #name	#dist.#min	#max
+//all N are in number of haploid individuals
+1  NPOP     logunif     100  100000   output
+1  TEXP     logunif     100  5000     output
+0  RESIZE   logunif     1e-3   1000   output
+0  MUTRATE  unif        1e-7   1e-9   output
+
+[RULES]
+
+[COMPLEX PARAMETERS]
+
+1  ANCSIZE  =  NPOP*RESIZE    output
+0  2N       =  2*NPOP         hide
+0  THETA    =  2N* MUTRATE    output
+

@@ -1,0 +1,64 @@
+VCFtools - VCF File Manipulation and Population Genetics Statistics
+===================================================================
+
+VCFtools provides methods for working with VCF files and calculating population genetics statistics.
+
+## Installation
+conda install -c bioconda vcftools
+
+## Basic Operations
+
+### Filtering
+# By quality and depth
+vcftools --vcf input.vcf --minQ 30 --min-meanDP 10 --max-meanDP 100 --recode --out filtered
+
+# By MAF and missing data
+vcftools --vcf input.vcf --maf 0.05 --max-missing 0.95 --recode --out filtered
+
+# By individuals
+vcftools --vcf input.vcf --keep samples.txt --recode --out subset
+vcftools --vcf input.vcf --remove related.txt --recode --out unrelated
+
+# By region
+vcftools --vcf input.vcf --chr 1 --from-bp 1000000 --to-bp 2000000 --recode --out region
+
+# Biallelic only
+vcftools --vcf input.vcf --min-alleles 2 --max-alleles 2 --recode --out biallelic
+
+### Population Genetics Statistics
+
+# Allele frequency
+vcftools --vcf input.vcf --freq2 --out freq
+
+# Heterozygosity per individual
+vcftools --vcf input.vcf --het --out het_stats
+
+# Nucleotide diversity (pi) in windows
+vcftools --vcf input.vcf --window-pi 10000 --out pi
+
+# Tajima's D in windows
+vcftools --vcf input.vcf --TajimaD 10000 --out tajima
+
+# FST between populations
+vcftools --vcf input.vcf --weir-fst-pop pop1.txt --weir-fst-pop pop2.txt --out fst
+vcftools --vcf input.vcf --weir-fst-pop pop1.txt --weir-fst-pop pop2.txt --fst-window-size 50000 --fst-window-step 25000 --out windowed_fst
+
+# LD statistics
+vcftools --vcf input.vcf --hap-r2 --ld-window-bp 500000 --out ld
+
+# Hardy-Weinberg
+vcftools --vcf input.vcf --hardy --out hwe
+
+# Site depth
+vcftools --vcf input.vcf --depth --out depth
+vcftools --vcf input.vcf --site-mean-depth --out site_depth
+
+### Format Conversion
+vcftools --vcf input.vcf --plink --out output    # VCF -> PLINK
+vcftools --vcf input.vcf --012 --out genotypes    # VCF -> 012 matrix
+
+## Population File Format (one sample per line)
+# pop1.txt:
+# sample1
+# sample2
+# sample3

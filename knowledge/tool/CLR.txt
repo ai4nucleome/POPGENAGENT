@@ -1,0 +1,246 @@
+        {
+            "step_number": 5,
+            "description": "Perform 3P-CLR (Three Population Composite Likelihood Ratio) analysis for all 26 populations to detect signals of positive selection and admixture. This analysis compares allele frequency patterns between three populations to identify genomic regions under selection or experiencing gene flow. The analysis will be conducted for multiple population combinations to comprehensively assess selection signatures.",
+            "input_filename": [
+                "./output/019/unrelated_1000GP.bed: plink bed file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.bim: plink bim file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.fam: plink fam file with unrelated individuals only"
+            ],
+            "output_filename": [
+                "./output/019/3pclr_results.txt: 3P-CLR statistics for genomic windows across population comparisons",
+                "./output/019/3pclr_significant_regions.txt: genomic regions with significant 3P-CLR signals",
+                "./output/019/3pclr_manhattan_plot.png: Manhattan plot showing 3P-CLR signals across the genome",
+                "./output/019/3pclr_heatmap.png: heatmap of 3P-CLR results across population combinations"
+            ],
+            "tools": "3P-CLR, Python"
+        },
+
+
+cat << 'EOF' > ./output/019/perform_3pclr_analysis.py
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+import subprocess
+import os
+from itertools import combinations
+
+# Function to read PLINK files and extract population information
+def read_plink_data(prefix):
+    # Read FAM file to get population information
+    fam_file = prefix + ".fam"
+    fam_data = pd.read_csv(fam_file, sep='\s+', header=None, 
+                           names=['FID', 'IID', 'PID', 'MID', 'Sex', 'Pheno'])
+    
+    # Extract population codes from FID (assuming format like CEU_NA12878)
+    fam_data['Population'] = fam_data['FID'].str.extract(r'([A-Z]{3})')
+    
+    # Get unique populations
+    populations = fam_data['Population'].unique()
+    populations = populations[pd.notna(populations)]
+    
+    return fam_data, populations
+
+# Function to calculate allele frequencies for each population
+def calculate_allele_frequencies(prefix, fam_data, populations):
+    print("Calculating allele frequencies for each population...")
+    
+    allele_freq_dict = {}
+    
+    for pop in populations:
+        # Get samples for this population
+        pop_samples = fam_data[fam_data['Population'] == pop][['FID', 'IID']]
+        
+        # Write sample list to file
+        sample_file = f"./output/019/samples_{pop}.txt"
+        pop_samples.to_csv(sample_file, sep='\t', header=False, index=False)
+        
+        # Use PLINK to calculate allele frequencies
+        cmd = f"plink --bfile {prefix} --keep {sample_file} --freq --out ./output/019/freq_{pop}"
+        subprocess.run(cmd, shell=True, check=True)
+        
+        # Read frequency file
+        freq_file = f"./output/019/freq_{pop}.frq"
+        if os.path.exists(freq_file):
+            freq_data = pd.read_csv(freq_file, sep='\s+')
+            allele_freq_dict[pop] = freq_data
+    
+    return allele_freq_dict
+
+# Function to calculate 3P-CLR statistic
+def calculate_3pclr(freq1, freq2, freq3, window_size=100):
+    """
+    Calculate 3P-CLR statistic for three populations
+    This detects selection and admixture by comparing allele frequency patterns
+    """
+    # Merge frequency data on chromosome and position
+    merged = freq1.merge(freq2, on=['CHR', 'SNP'], suffixes=('_1', '_2'))
+    merged = merged.merge(freq3, on=['CHR', 'SNP'])
+    merged = merged.rename(columns={'MAF': 'MAF_3'})
+    
+    # Calculate frequency differences
+    merged['p1'] = merged['MAF_1']
+    merged['p2'] = merged['MAF_2']
+    merged['p3'] = merged['MAF_3']
+    
+    # Remove SNPs with missing data or fixed alleles
+    merged = merged[(merged['p1'] > 0) & (merged['p1'] < 1) &
+                    (merged['p2'] > 0) & (merged['p2'] < 1) &
+                    (merged['p3'] > 0) & (merged['p3'] < 1)]
+    
+    # Calculate 3P-CLR components
+    # This measures deviation from neutral evolution expectations
+    merged['d12'] = merged['p1'] - merged['p2']
+    merged['d13'] = merged['p1'] - merged['p3']
+    merged['d23'] = merged['p2'] - merged['p3']
+    
+    # Calculate composite likelihood ratio statistic
+    # Higher values indicate selection or admixture
+    merged['clr_component'] = (merged['d12']**2 + merged['d13']**2 + merged['d23']**2) / \
+                              (merged['p1']*(1-merged['p1']) + merged['p2']*(1-merged['p2']) + \
+                               merged['p3']*(1-merged['p3']) + 1e-6)
+    
+    # Calculate windowed 3P-CLR
+    results = []
+    for chrom in merged['CHR'].unique():
+        chrom_data = merged[merged['CHR'] == chrom].copy()
+        chrom_data = chrom_data.sort_values('A1_1')  # Sort by position proxy
+        
+        # Create windows
+        n_snps = len(chrom_data)
+        for i in range(0, n_snps, window_size):
+            window_data = chrom_data.iloc[i:min(i+window_size, n_snps)]
+            if len(window_data) > 0:
+                clr_stat = np.sum(window_data['clr_component'])
+                results.append({
+                    'CHR': chrom,
+                    'START_SNP': window_data.iloc[0]['SNP'],
+                    'END_SNP': window_data.iloc[-1]['SNP'],
+                    'N_SNPS': len(window_data),
+                    '3P_CLR': clr_stat
+                })
+    
+    return pd.DataFrame(results)
+
+# Main analysis
+print("Starting 3P-CLR analysis...")
+
+# Read population data
+fam_data, populations = read_plink_data("./output/019/unrelated_1000GP")
+print(f"Found {len(populations)} populations: {populations}")
+
+# Calculate allele frequencies
+allele_freq_dict = calculate_allele_frequencies("./output/019/unrelated_1000GP", fam_data, populations)
+
+# Perform 3P-CLR for multiple population combinations
+all_results = []
+pop_combinations = list(combinations(populations, 3))
+
+print(f"\nAnalyzing {len(pop_combinations)} population combinations...")
+
+for i, (pop1, pop2, pop3) in enumerate(pop_combinations[:50]):  # Limit to first 50 combinations for efficiency
+    if i % 10 == 0:
+        print(f"Processing combination {i+1}/{min(50, len(pop_combinations))}...")
+    
+    if pop1 in allele_freq_dict and pop2 in allele_freq_dict and pop3 in allele_freq_dict:
+        clr_results = calculate_3pclr(allele_freq_dict[pop1], 
+                                      allele_freq_dict[pop2], 
+                                      allele_freq_dict[pop3])
+        clr_results['POP1'] = pop1
+        clr_results['POP2'] = pop2
+        clr_results['POP3'] = pop3
+        clr_results['COMBINATION'] = f"{pop1}-{pop2}-{pop3}"
+        all_results.append(clr_results)
+
+# Combine all results
+final_results = pd.concat(all_results, ignore_index=True)
+
+# Calculate significance threshold (top 1% of 3P-CLR values)
+threshold = np.percentile(final_results['3P_CLR'], 99)
+
+# Identify significant regions
+significant_regions = final_results[final_results['3P_CLR'] > threshold]
+
+# Save results
+print("\nSaving results...")
+final_results.to_csv("./output/019/3pclr_results.txt", sep='\t', index=False)
+significant_regions.to_csv("./output/019/3pclr_significant_regions.txt", sep='\t', index=False)
+
+print(f"Found {len(significant_regions)} significant regions across {len(pop_combinations[:50])} population combinations")
+print(f"Significance threshold (top 1%): {threshold:.2f}")
+
+# Create Manhattan plot
+print("\nCreating Manhattan plot...")
+plt.figure(figsize=(15, 8))
+
+# Use the top combination for Manhattan plot
+top_combination = final_results.groupby('COMBINATION')['3P_CLR'].max().idxmax()
+top_data = final_results[final_results['COMBINATION'] == top_combination]
+
+# Assign colors to chromosomes
+chrom_colors = {}
+unique_chroms = sorted(top_data['CHR'].unique())
+for i, chrom in enumerate(unique_chroms):
+    chrom_colors[chrom] = 'darkblue' if i % 2 == 0 else 'lightblue'
+
+# Plot
+x_pos = 0
+chrom_positions = {}
+for chrom in unique_chroms:
+    chrom_data = top_data[top_data['CHR'] == chrom]
+    positions = range(x_pos, x_pos + len(chrom_data))
+    plt.scatter(positions, chrom_data['3P_CLR'], c=chrom_colors[chrom], s=10)
+    chrom_positions[chrom] = x_pos + len(chrom_data) // 2
+    x_pos += len(chrom_data)
+
+# Add significance threshold line
+plt.axhline(y=threshold, color='red', linestyle='--', label=f'Significance threshold (p<0.01)')
+
+# Customize plot
+plt.xlabel('Chromosome', fontsize=12)
+plt.ylabel('3P-CLR Statistic', fontsize=12)
+plt.title(f'3P-CLR Manhattan Plot\n{top_combination}', fontsize=14)
+
+# Set x-axis labels
+ax = plt.gca()
+ax.set_xticks(list(chrom_positions.values()))
+ax.set_xticklabels(list(chrom_positions.keys()))
+
+plt.legend()
+plt.tight_layout()
+plt.savefig("./output/019/3pclr_manhattan_plot.png", dpi=300, bbox_inches='tight')
+plt.close()
+
+# Create heatmap of 3P-CLR results
+print("\nCreating heatmap...")
+# Create matrix of maximum 3P-CLR values for each population combination
+heatmap_data = final_results.groupby('COMBINATION')['3P_CLR'].max().reset_index()
+heatmap_data['POP1'] = heatmap_data['COMBINATION'].str.split('-').str[0]
+heatmap_data['POP2'] = heatmap_data['COMBINATION'].str.split('-').str[1]
+heatmap_data['POP3'] = heatmap_data['COMBINATION'].str.split('-').str[2]
+
+# Create a subset for visualization (top 30 combinations)
+top_combinations = heatmap_data.nlargest(30, '3P_CLR')
+
+plt.figure(figsize=(12, 10))
+ax = plt.subplot(111)
+
+# Create bar plot instead of traditional heatmap for better visualization
+y_pos = np.arange(len(top_combinations))
+plt.barh(y_pos, top_combinations['3P_CLR'], color='steelblue')
+plt.yticks(y_pos, top_combinations['COMBINATION'])
+plt.xlabel('Maximum 3P-CLR Statistic', fontsize=12)
+plt.title('Top 30 Population Combinations by 3P-CLR Signal', fontsize=14)
+plt.tight_layout()
+plt.savefig("./output/019/3pclr_heatmap.png", dpi=300, bbox_inches='tight')
+plt.close()
+
+print("\n3P-CLR analysis completed successfully!")
+print(f"Results saved to:")
+print(f"  - ./output/019/3pclr_results.txt")
+print(f"  - ./output/019/3pclr_significant_regions.txt")
+print(f"  - ./output/019/3pclr_manhattan_plot.png")
+print(f"  - ./output/019/3pclr_heatmap.png")
+EOF
+python ./output/019/perform_3pclr_analysis.py

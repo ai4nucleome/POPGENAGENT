@@ -1,0 +1,125 @@
+.step {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #CED3E0;
+}
+.step-number {
+    font-weight: bold;
+    color: #4a90e2;
+}
+.step-description {
+    margin-top: 5px;
+}
+.step-files,
+.step-tools {
+    margin-top: 10px;
+}
+ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+ul li {
+    margin-bottom: 5px;
+}
+.steps {
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #e9ecef;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+.steps pre {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+}
+
+
+.plan-editor{
+    width: 100%;
+    min-height: 70vh; /* Auto-adjust height */
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Match existing border radius */
+    resize: vertical;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin-bottom: 10px; /* Same spacing as existing content blocks */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Inner shadow, match existing style */
+}
+
+
+.step-editor {
+    width: 100%;
+    min-height: 20vh; /* Auto-adjust height */
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Match existing border radius */
+    resize: vertical;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin-bottom: 10px; /* Same spacing as existing content blocks */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Inner shadow, match existing style */
+}
+.edit-buttons {
+    width: 30%;
+    display: flex;              /* Use flexbox layout */
+    justify-content: flex-end;  /* Align buttons to the right */
+    gap: 10px;                  /* Set spacing between buttons */
+    box-sizing: border-box;     /* Include padding and border in size calculation */
+    
+}
+
+
+.edit-buttons button {
+    flex: 1;                   /* Make buttons share parent container width equally */
+    max-width: 45%;            /* Set max width for each button */
+    padding: 10px 20px;        /* Add padding to ensure button content displays properly */
+    box-sizing: border-box;    /* Include padding and border in size calculation */
+}
+
+
+
+.plan-block, .steps-block {
+    position: relative;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+}
+
+.plan-block button, .steps-block button {
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #4a90e2;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.plan-block button:hover, .steps-block button:hover {
+    background-color: #357abd;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.steps pre, .plan pre {
+    background: #CED3E0;
+    padding: 10px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    margin-bottom: 10px; /* Increase bottom spacing */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}

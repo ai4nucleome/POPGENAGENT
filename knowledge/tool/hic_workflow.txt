@@ -1,0 +1,228 @@
+1. run-bwa-mem.sh:
+Alignment module for Hi-C data, based on bwa-mem.
+Input : a pair of Hi-C fastq files
+Output : a bam file (Lossless, not sorted by coordinate)
+Usage
+Run the following in the container.
+run-bwa-mem.sh <fastq1> <fastq2> <bwaIndex> <outdir> <output_prefix> <nThreads>
+# fastq1, fastq2 : input fastq files, either gzipped or not
+# bwaIndex : tarball for bwa index, .tgz.
+# outdir : output directory
+# output_prefix : prefix of the output bam file.
+# nThreads : number of threads
+
+The script is invoked in the./script/ path as bash./script/run-bwa-mem.sh. Set parameters according to the example:I want to output under./output/003/.Reference file path for: ./data/hg38.bwaindex.tgz,no need to extract the reference file, and the first pair are ./data/4DNFI15H1RVG.fastq.gz and ./data/4DNFIZHUKESO.fastq.gz, the second pair are for: ./data/4DNFIKVDGNJN.fastq.gz and ./data/4DNFIEQ58J6G.fastq.gz,  the target is the first pair result is bwa_1.bam,the second pair result is bwa.2.bam. the generated script is:
+
+bash ./scripts/run-bwa-mem.sh ./data/4DNFI15H1RVG.fastq.gz ./data/4DNFIZHUKESO.fastq.gz  ./data/hg38.bwaindex.tgz ./output/003/  bwa_1 64
+
+bash ./scripts/run-bwa-mem.sh ./data/4DNFIKVDGNJN.fastq.gz ./data/4DNFIEQ58J6G.fastq.gz  ./data/hg38.bwaindex.tgz ./output/003/ bwa_2 64
+
+When the command is generated, the file name and the output path must require a space, otherwise the file name will be regarded as the folder name. bwa_1,bwa_2 indicate the generated file name, You should adjust according to the description of the desired destination file name. For example, the directive: bash ./scripts/run-bwa-mem.sh ./data/4DNFIKVDGNJN.fastq.gz ./data/4DNFIEQ58J6G.fastq.gz  ./data/hg38.bwaindex. tgz  In./output/003/ bwa_2 64, there is a space between /output/003/ and bwa_2, which must not be omitted. There is also a space between bwa_2 and 64 that cannot be omitted.and 64 indicate the number of threads. The number of threads is usually set to 16 or 32. You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.
+
+---
+
+2. run-sort-bam.sh:
+Data-type-independent, generic bam sorting module
+Input : any unsorted bam file (.bam)
+Output : a bam file sorted by coordinate (.sorted.bam) and its index (.sorted.bam.bai).
+Usage
+Run the following in the container.
+run-sort-bam.sh <input_bam> <output_prefix>
+# input_bam : any bam file to be sorted
+# output_prefix : prefix of the output bam file.
+
+Set parameters according to the example: Suppose the input file is: ./output/GM12878_bwa_1.bam and ./output/GM12878_bwa_2.bam, the target is./output/GM12878_bwa_sorted.bam and ./output/GM12878_bwa_sorted, Generate the following sample script:
+bash ./scripts/run-sort-bam.sh ./output/GM12878_bwa_1.bam ./output/GM12878_bwa_sorted 
+
+bash ./scripts/run-sort-bam.sh ./output/GM12878_bwa_2.bam ./output/GM12878_bwa_sorted
+
+You can install the tool, but do not do any additional operations.You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.
+
+---
+
+3. run-bam2pairs.sh:
+Bam to pairs conversion module for Hi-C data, based on samtools, bgzip and pairix.
+Input : any paired-end bam file
+Output : a chromosome-block-sorted and bgzipped pairs pairs file that contains all the mapped read pairs in the bam file, along with its index (.bsorted.pairs.gz and .bsorted.pairs.gz.px2)
+Usage
+Run the following in the container.
+run-bam2pairs.sh <input_bam> <output_prefix>
+# input_bam : input bam file.
+# output_prefix : prefix of the output pairs file.
+Set parameters according to the example:
+Suppose the input file is: ./output/GM12878_bwa_sorted_1.bam and ./output/GM12878_bwa_sorted_2.bam, the target is./output/GM12878_bwa_sorted_pairs  and./output/GM12878_bwa_sorted_pairs , Generate the following sample script:
+bash ./scripts/run-bam2pairs.sh ./output/GM12878_bwa_sorted_1.bam ./output/GM12878_bwa_sorted_pairs   
+bash ./scripts/run-bam2pairs.sh ./output/GM12878_bwa_sorted_2.bam ./output/GM12878_bwa_sorted_pairs 
+
+You can install the tool, but do not do any additional operations.You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.
+
+---
+
+2. run-pairsam-parse-sort.sh
+Runs pairsam parse and sort on a bwa-produced bam file and produces a sorted pairsam file
+Input: a bam file
+Output: a pairsam file
+Usage
+Run the following in the container
+run-pairsam-parse-sort.sh <input_bam> <chromsizes> <outdir> <outprefix> <nthread> <compress_program>
+# input_bam : an input bam file.
+# chromsizes : a chromsize file
+# outdir : output directory
+# outprefix : prefix of output files
+# nthread : number of threads to use
+
+Set parameters according to the example:
+Suppose the input file is: ./output/aligned/a1.bam  and ./output/aligned/abc.bam, the target is ./output/003/pairsam_fix1.sam.pairs.gz and ./output/003/pairsam_fix2.sam.pairs.gz . ./hg38.chrom.sizes  is the a chromsize file. Generate the following sample script:
+
+bash ./scripts/run-pairsam-parse-sort.sh ./output/aligned/a1.bam ./hg38.chrom.sizes ./output/003/  pairsam_fix1 64 lz4c 
+bash ./scripts/run-pairsam-parse-sort.sh ./output/aligned/abc.bam ./hg38.chrom.sizes ./output/003/  pairsam_fix2 64 lz4c
+
+You can install the tool, but do not do any additional operations.and 64 indicate the number of threads.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.
+
+---
+
+3. run-pairsam-merge.sh
+Merges a list of pairsam files
+Input: a list of pairsam files
+Output: a merged pairsam file
+Usage
+Run the following in the container
+run-pairsam-merge.sh <outprefix> <nthreads> <input_pairsam1> [<input_pairsam2> [<input_pairsam3> [...]]]
+# outprefix : prefix of output files
+# nthreads : number of threads to use   
+# input_pairsam : an input pairsam file.
+
+Set parameters according to the example:
+Suppose the input file is: ./output/003/pairsam_fix1.sam.pairs.gz  and ./output/003/pairsam_fix2.sam.pairs.gz, the target is ./output/003/out.merged.sam.pairs.gz . Generate the following sample script:
+
+bash ./scripts/run-pairsam-merge.sh ./output/003/out 64 './output/003/pairsam_fix1.sam.pairs.gz ./output/003/pairsam_fix2.sam.pairs.gz' 
+
+You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.and 64 indicate the number of threads.
+
+---
+
+4. run-pairsam-markasdup.sh
+Takes a pairsam file in and creates a pairsam file with duplicate reads marked
+* Input: a pairsam file
+* Output: a duplicate-marked pairsam file
+Usage
+Run the following in the container
+run-pairsam-markasdup.sh <input_pairsam>
+# input_pairsam : an input pairsam file.
+# outprefix : prefix of output files
+
+Set parameters according to the example:
+Suppose the input file is:  ./output/003/out.merged.sam.pairs.gz,the target is ./output/003/out1.  Generate the following sample script:
+
+bash ./scripts/run-pairsam-markasdup.sh  ./output/003/out.merged.sam.pairs.gz  ./output/003/out1  
+
+You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.and 64 indicate the number of threads.
+
+---
+
+5. run-pairsam-filter.sh
+Takes in a pairsam file and creates a lossless, annotated bam file and a filtered pairs file.
+Input: a pairsam file
+Output: an annotated bam file and a filtered pairs file
+Usage
+Run the following in the container
+run-pairsam-filter.sh <input_pairsam> <outprefix> <chromsizes>
+# input_pairsam : an input pairsam file.
+# outprefix : prefix of output files
+# chromsizes : a chromsize file
+
+Set parameters according to the example:
+Suppose the input file is: ../sample_data/outlala.merged.sam.pairs.gz, the target is  ./out/out12345.dedup.pairs.gz and ./out/out12345.lossless.bam ,/home/agent/POPGENAGENT/data/hg38.chrom.sizes is the a chromsize file. Generate the following sample script:
+
+bash ./scripts/run-pairsam-filter.sh  ./sample_data/outlala.merged.sam.pairs.gz ./out/out12345  /home/agent/POPGENAGENT/data/hg38.chrom.sizes
+
+You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.
+
+---
+
+6. run-merge-pairs.sh
+Alignment module for Hi-C data, based on merge-pairs.
+
+Input : a set of pairs files, with their associated indices
+Output : a merged pairs file and its index
+Usage
+Run the following in the container.
+run-merge-pairs.sh <output_prefix> <pairs1> <pairs2> [<pairs3> [...]]  
+# output_prefix : prefix of the output pairs file.
+# pairs1, pairs2, ... : input pairs files
+
+Set parameters according to the example:
+Suppose the input file is: ./out/out12345.dedup.pairs.gz, the target is ./out/out321.pairs.gz. Generate the following sample script:
+
+bash ./scripts/run-merge-pairs.sh ./out/out321 ./out/out12345.dedup.pairs.gz
+
+You can install the tool, but do not do any additional operations. Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.
+
+---
+
+7. run-cooler.sh
+Runs cooler to create an unnormalized matrix .cool file, taking in a (4dn-style) pairs file
+Input : a pairs file (.gz, along with .px2), chrom.size file
+Output : a contact matrix file (.cool)
+Usage
+Run the following in the container.
+run-cooler.sh <input_pairs> `<chromsize>` `<binsize>` `<ncores>` <output_prefix> <max_split>
+run-cooler.sh <input_pairs> <chromsize> <binsize> <ncores> <output_prefix> <max_split>
+# input_pairs : a pairs file
+# chromsize : a chromsize file
+# binsize : binsize in bp
+# ncores : number of cores to use
+# output_prefix : prefix of the output cool file
+# max_split : max_split argument for cooler (e.g. 2 which is default for cooler) 
+
+Set parameters according to the example:
+Suppose the input file is:/home/agent/POPGENAGENT/sample_data/outlala.ff.pairs.gz , the target is  ./out/out3 ,/home/agent/POPGENAGENT/data/hg38.chrom.sizes is the a chromsize file. Generate the following sample script:
+
+bash ./scripts/run-cooler.sh      /home/agent/POPGENAGENT/sample_data/outlala.ff.pairs.gz      /home/agent/POPGENAGENT/data/hg38.chrom.sizes      1000      32      ./out/out3      2
+
+You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.and 32 indicate the number of threads.
+
+---
+
+8. run-cooler-balance.sh
+Runs cooler to create a normalized matrix file, taking in an unnormalized .cool file
+Input: a cool file (.cool)
+Output : a cool file (.cool)
+Usage
+Run the following in the container.
+run-cooler-balance.sh <input_cool> <max_iter> <output_prefix> <chunksize>
+# input_cool : a cool file (without normalization vector)
+# max_iter : maximum number of iterations
+# output_prefix : prefix of the output cool file
+# chunksize : chunksize argument for cooler (e.g. 10000000 which is default for cooler)
+
+Set parameters according to the example:
+Suppose the input file is: ./output/003/cool_prefix.cool , the target is ./output/003/cool_prefix_normalized.cool,/home/agent/POPGENAGENT/data/hg38.chrom.sizes is the a chromsize file. Generate the following sample script:
+
+bash ./scripts/run-cooler-balance.sh ./output/003/cool_prefix.cool 1000 ./output/003/cool_prefix_normalized 10000000
+
+You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.and 64 indicate the number of threads.
+
+---
+
+9. run-cool2multirescool.sh
+Runs cooler coarsegrain to create multi-res cool file from a .cool file.
+Input : a cool file (.cool)
+Output : a multires.cool file (.multires.cool)
+Usage
+Run the following in the container.
+run-cool2multirescool.sh -i <input_cool> [-p <ncores>] [-o <output_prefix>] [-c <chunksize>] [-j] [-u custom_res] [-B]
+# input_cool : a (single-res) cool file with the highest resolution you want in the multi-res cool file
+# -p ncores: number of cores to use (default: 1)
+# -o output_prefix: prefix of the output multires.cool file (default: out)
+# -c chunksize : chunksize argument of cooler (e.g. default: 10000000)
+# -j : juicer resolutions (default: use HiGlass resolutions)
+# -u custom_res : custom resolutions separated by commas (e.g. 100000,200000,500000). The minimum of this set must match min_res (-r).
+# -B : no balancing/normalizations
+
+Set parameters according to the example:
+Suppose the input file is: ./output/003/cool_prefix_normalized.cool , the target is ./output/003/multirescool_prefix.mcool. Generate the following sample script:
+
+bash ./scripts/run-cool2multirescool.sh -i ./output/003/cool_prefix_normalized.cool -p 8 -o ./output/003/multirescool_prefix -c 10000000 -j -u 100000,200000,500000
+
+You can install the tool, but do not do any additional operations.Please follow the example to generate rather than copy and paste completely, especially for folder names, file names, etc.and 64 indicate the number of threads.

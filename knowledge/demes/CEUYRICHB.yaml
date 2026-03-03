@@ -1,0 +1,76 @@
+demes:
+- epochs:
+  - end_time: 8800.0
+    start_size: 7300
+  name: ancestral
+- ancestors:
+  - ancestral
+  epochs:
+  - end_time: 5600.0
+    start_size: 12300
+  name: AMH
+- ancestors:
+  - AMH
+  epochs:
+  - end_time: 3000.0
+    start_size: 2100
+  name: OOA
+- ancestors:
+  - AMH
+  epochs:
+  - end_time: 2000.0
+    start_size: 20000
+  - end_time: 0
+    start_size: 25000
+  name: YRI
+- ancestors:
+  - OOA
+  epochs:
+  - end_time: 1000.0
+    start_size: 15000
+  - end_time: 0
+    start_size: 30000
+  name: CHB
+- ancestors:
+  - OOA
+  epochs:
+  - start_size: 18000
+  name: CEU
+description: Migration and separation model for Out-of-Africa populations with dynamic
+  migration rates
+generation_time: 25
+migrations:
+- demes:
+  - YRI
+  - CHB
+  end_time: 1000.0
+  rate: 0.00015
+  start_time: 3000.0
+- demes:
+  - YRI
+  - CEU
+  end_time: 1000.0
+  rate: 0.00015
+  start_time: 3000.0
+- demes:
+  - CHB
+  - CEU
+  end_time: 1000.0
+  rate: 0.00032
+  start_time: 3000.0
+- demes:
+  - YRI
+  - CHB
+  rate: 0.00025
+  start_time: 1000.0
+- demes:
+  - YRI
+  - CEU
+  rate: 0.00025
+  start_time: 1000.0
+- demes:
+  - CHB
+  - CEU
+  rate: 0.00032
+  start_time: 1000.0
+time_units: generations

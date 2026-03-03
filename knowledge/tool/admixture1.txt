@@ -1,0 +1,94 @@
+ {
+            "step_number": 9,
+            "description": "Perform ADMIXTURE analysis for K values ranging from 1 to 12 to infer ancestry proportions and identify the optimal number of ancestral populations. Cross-validation will be used to determine the optimal K value based on the lowest CV error. The analysis will generate ancestry proportion estimates for each individual at each K value.",
+            "input_filename": [
+                "./output/019/ld_pruned2_1000GP.bed: strictly LD-pruned plink bed file for structure analysis",
+                "./output/019/ld_pruned2_1000GP.bim: strictly LD-pruned plink bim file for structure analysis",
+                "./output/019/ld_pruned2_1000GP.fam: strictly LD-pruned plink fam file for structure analysis"
+            ],
+            "output_filename": [
+                "./output/019/admixture_k1.Q: ancestry proportions for K=1",
+                "./output/019/admixture_k2.Q: ancestry proportions for K=2",
+                "./output/019/admixture_k3.Q: ancestry proportions for K=3",
+                "./output/019/admixture_k4.Q: ancestry proportions for K=4",
+                "./output/019/admixture_k5.Q: ancestry proportions for K=5",
+                "./output/019/admixture_k6.Q: ancestry proportions for K=6",
+                "./output/019/admixture_k7.Q: ancestry proportions for K=7",
+                "./output/019/admixture_k8.Q: ancestry proportions for K=8",
+                "./output/019/admixture_k9.Q: ancestry proportions for K=9",
+                "./output/019/admixture_k10.Q: ancestry proportions for K=10",
+                "./output/019/admixture_k11.Q: ancestry proportions for K=11",
+                "./output/019/admixture_k12.Q: ancestry proportions for K=12",
+                "./output/019/cv_errors.txt: cross-validation errors for K=1 to K=12",
+                "./output/019/optimal_k_plot.png: plot of CV errors to identify optimal K"
+            ],
+            "tools": "ADMIXTURE, Python"
+        },
+
+
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 1 -j4 > ./output/019/admixture_k1.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 2 -j4 > ./output/019/admixture_k2.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 3 -j4 > ./output/019/admixture_k3.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 4 -j4 > ./output/019/admixture_k4.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 5 -j4 > ./output/019/admixture_k5.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 6 -j4 > ./output/019/admixture_k6.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 7 -j4 > ./output/019/admixture_k7.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 8 -j4 > ./output/019/admixture_k8.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 9 -j4 > ./output/019/admixture_k9.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 10 -j4 > ./output/019/admixture_k10.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 11 -j4 > ./output/019/admixture_k11.log 2>&1
+admixture --cv ./output/019/ld_pruned2_1000GP.bed 12 -j4 > ./output/019/admixture_k12.log 2>&1
+grep -h CV admixture_k*.log | sed 's/CV error (K=\([0-9]*\)): \(.*\)/\1\t\2/' | sort -n -k1 > ./output/019/cv_errors.txt
+cat << 'EOF' > ./output/019/plot_cv_errors.py
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Read CV errors
+cv_data = []
+with open('cv_errors.txt', 'r') as f:
+    for line in f:
+        k, cv_error = line.strip().split('\t')
+        cv_data.append((int(k), float(cv_error)))
+
+# Sort by K value
+cv_data.sort(key=lambda x: x[0])
+k_values = [x[0] for x in cv_data]
+cv_errors = [x[1] for x in cv_data]
+
+# Create the plot
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(k_values, cv_errors, 'b-o', linewidth=2, markersize=8)
+
+# Find and mark the optimal K (lowest CV error)
+min_idx = np.argmin(cv_errors)
+optimal_k = k_values[min_idx]
+min_cv = cv_errors[min_idx]
+
+ax.plot(optimal_k, min_cv, 'ro', markersize=12)
+ax.annotate(f'Optimal K={optimal_k}\nCV={min_cv:.4f}', 
+            xy=(optimal_k, min_cv), 
+            xytext=(optimal_k + 0.5, min_cv + 0.002),
+            arrowprops=dict(arrowstyle='->', color='red'),
+            fontsize=10,
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
+
+# Formatting
+ax.set_xlabel('K (Number of Ancestral Populations)', fontsize=12)
+ax.set_ylabel('Cross-Validation Error', fontsize=12)
+ax.set_title('ADMIXTURE Cross-Validation Error vs K', fontsize=14, fontweight='bold')
+ax.grid(True, alpha=0.3)
+ax.set_xticks(k_values)
+
+# Add a box with summary statistics
+textstr = f'K range: {min(k_values)}-{max(k_values)}\nOptimal K: {optimal_k}\nMin CV error: {min_cv:.4f}'
+props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+ax.text(0.95, 0.95, textstr, transform=ax.transAxes, fontsize=10,
+        verticalalignment='top', horizontalalignment='right', bbox=props)
+
+plt.tight_layout()
+plt.savefig('optimal_k_plot.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print(f"Optimal K value: {optimal_k} with CV error: {min_cv:.4f}")
+EOF
+cd ./output/019 && python plot_cv_errors.py

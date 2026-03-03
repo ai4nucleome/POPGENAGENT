@@ -1,0 +1,26 @@
+ description: The two-population model inferred in Tennessen et al (2012).
+ doi: ["https://doi.org/10.1038/nature11690"]
+ time_units: years
+ generation_time: 25
+ demes:- name: ancestral
+ description: Population that splits into EUR and AFR
+ epochs:- start_size: 7310
+ end_time: 148000- start_size: 14474
+ end_time: 51000- name: AFR
+ description: African Americans
+ ancestors: [ancestral]
+ epochs:- start_size: 14474
+ end_time: 5115- end_time: 0
+ end_size: 432125- name: EUR
+ description: European Americans
+ ancestors: [ancestral]
+ epochs:- start_size: 1861
+ end_time: 23000- start_size: 1032
+ end_time: 5115
+ end_size: 9279- end_time: 0
+ end_size: 501436
+ migrations:- demes: [AFR, EUR]
+ rate: 1.5e-4
+ end_time: 5115- demes: [AFR, EUR]
+ rate: 2.5e-5
+ start_time: 5115

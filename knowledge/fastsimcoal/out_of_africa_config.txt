@@ -1,0 +1,27 @@
+# Out-of-Africa FastSimCoal2 Configuration
+# Based on Gutenkunst et al. (2009) OOA model
+
+Goal: Analyze population structure and demographic history of YRI, CEU, and CHB populations using Out-of-Africa model
+
+Key Principles:
+1. YRI diverges first from ancestral population
+2. Eurasian intermediate population is created after out-of-Africa
+3. CEU and CHB diverge from shared Eurasian population later
+4. Time ordering: TDIV1 (YRI) > TDIV2 (CEU-CHB) with non-overlapping ranges
+5. Include gene flow between CEU and CHB after their divergence
+
+Parameter Naming Rules:
+- Use RSIZE1, RSIZE2, RSIZE3 for population size changes (not NPOP1B, NPOP2B, NPOP3B)
+- Avoid parameter names that are subsets of each other
+- Use clear, distinct names: NPOP1, NPOP2, NPOP3, ANC0, ANC12, TDIV1, TDIV2
+
+Historical Event Structure:
+- TDIV1: YRI diverges from ancestral (e.g., 2000-5000 generations)
+- TDIV2: CEU and CHB diverge from Eurasian (e.g., 100-1000 generations)
+- Include migration matrices for gene flow between populations
+
+Migration Patterns:
+- YRI to OOA: Low rate (e.g., 0.00025)
+- YRI to CEU/CHB: Very low rate (e.g., 0.00003, 0.000019)
+- CEU to CHB: Moderate rate (e.g., 0.000096)
+- CHB to CEU: Moderate rate (e.g., 0.000096)

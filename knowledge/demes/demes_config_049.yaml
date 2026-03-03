@@ -1,0 +1,32 @@
+# Goal: Based on the available data, conduct an inference of a migration and separation model for two populations
+# Generated from output 049
+# Successfully validated
+
+demes:
+- description: Ancestral population before split
+  epochs:
+  - end_time: 20000.0
+    start_size: 20000
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: First population after split
+  epochs:
+  - start_size: 10000
+  name: POP1
+- ancestors:
+  - ancestral
+  description: Second population after split
+  epochs:
+  - start_size: 10000
+  name: POP2
+description: Two-population migration and separation model for demographic inference
+generation_time: 25
+migrations:
+- dest: POP2
+  rate: 0.0001
+  source: POP1
+- dest: POP1
+  rate: 0.0001
+  source: POP2
+time_units: years

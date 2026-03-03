@@ -1,0 +1,132 @@
+[
+  {
+    "content": "BACKGROUND: Gastric cancer (GC) is a highly heterogeneous and complex disease. Recently, integrin β (ITGB) superfamily members have been shown to play crucial roles in the initiation and progression of various human cancers. However, the precise role and molecular mechanisms of ITGB1 in GC are yet to be fully elucidated.\nMETHODS: This bioinformatics and clinical study systematically analyzed the pan-cancer expression patterns and prognostic significance of ITGBs using data from The Cancer Genome Atlas and Genotype-Tissue Expression portals. Multivariate regression analysis was performed to identify key factors influencing GC prognosis. Candidate noncoding RNAs (ncRNAs) potentially regulating ITGB1 expression were identified via expression profiling, coexpression assessment, and survival correlation studies. Furthermore, the associations of ITGB1 and its related long ncRNA MIR99AHG with tumor-infiltrating immune cells, immune cell markers, and immune checkpoint molecules in GC were explored.\nRESULTS: Compared with adjacent normal tissues, the ITGB1, ITGB2, ITGB4, ITGB5, and ITGB8 mRNA levels were significantly upregulated in GC tissues (p < 0.05). Cox regression and Kaplan-Meier survival analyses indicated that ITGB1 upregulation was associated with poor prognosis (univariable hazards ratio = 1.40, 95% confidence interval 1.008-1.956, p = 0.045) and served as an independent prognostic factor (multivariate hazards ratio = 1.46, 95% confidence interval 1.004-2.140, p = 0.048) in patients with GC. The MIR99AHG/hsa-mir-17-5p axis (r = - 0.56, p < 0.001) was identified as the most promising upstream ncRNA-related pathway regulating ITGB1 expression in GC. In addition, ITGB1 expression in GC and adjacent nontumorous tissues was validated using immunohistochemistry (H-score: 35.4 ± 19.2 vs. 28.4 ± 16.2, respectively; p = 0.035). MIR99AHG expression was similarly assessed through in situ hybridization (H-score: 32.4 ± 15.6 vs. 20.5 ± 11.0, respectively; p < 0.001). There was a positive correlation between ITGB1 expression and infiltrating CD4 + T cells (r = 0.17, p < 0.001), M2 macrophages (r = 0.37, p < 0.001), dendritic cells (r = 0.19, p < 0.001), and immune checkpoints (PD-L1, CTLA-4, and CD28). Particularly, high macrophage infiltration was associated with favorable prognosis in GC (p = 0.004).\nCONCLUSIONS: Our findings suggest that ncRNA-mediated ITGB1 expression is associated with poor prognosis and tumor-immune infiltration in GC. However, further validation through extensive mechanistic studies and large-scale clinical trials is warranted.",
+    "metadata": {
+      "uid": "40660403",
+      "Title": "ncRNA-mediated ITGB1 upregulation correlates with poor prognosis and tumor-immune infiltration in gastric cancer.",
+      "Published": "2025-07-14",
+      "Copyright Information": "© 2025. The Author(s).",
+      "id": "13e6ef23-ad90-4774-b037-35f9e15bfb0d",
+      "source": "pubmed_online",
+      "original_query": "What are the abbreviations and corresponding populations of the 26 populations in the 1,000 human genomes?",
+      "successful_query": "genome human genome"
+    }
+  },
+  {
+    "content": "BACKGROUND: Clear cell renal cell carcinoma (ccRCC) is a prevalent and aggressive form of kidney cancer. Recently, the identification of suitable subtypes in ccRCC for the prediction of prognosis and immune infiltration remains limited. Kinesin superfamily proteins (KIFs), a group of molecular motor proteins, have been found to play crucial roles in tumor progression and patient prognosis in various cancers. However, the subtypes in ccRCC based on KIFs remain poorly understood.\nMETHODS: In this study, transcriptional profiles of ccRCC were analyzed using data from the Gene Expression Omnibus (GEO) and The Cancer Genome Atlas (TCGA) databases. Differential expression of KIFs was identified using R software. Subsequently, ccRCC patients were stratified into two distinct subgroups based on non-negative matrix factorization (NMF) analysis. Comparative analyses were performed to evaluate prognosis, mutations, and immune cell infiltration between these subtypes. Furthermore, signature genes associated with the identified subtypes were determined, followed by an investigation into their relationship with clinical characteristics and response to immune checkpoint inhibitors. Validation studies involving immunohistochemical staining, malignant phenotype assays, and immunofluorescence were conducted to assess the expression and function of these signature genes.\nRESULTS: Five KIFs genes, namely, KIF21B, KIF18B, KIF20A, KIF4A, and KIF13B, were identified as classifiers for categorizing ccRCC patients into two distinct subtypes known as KPCS1 and KPCS2. The aggressive subtype, KPCS2, was found to be associated with poorer survival outcomes. Furthermore, higher immune infiltration and copy number variations were observed in the KPCS2 subtype. Four signature genes (SLCA15, WDR72, PSAT1, and HJURP) displayed significant correlations with clinical characteristics and were determined to be linked to the ccRCC subtypes. The expression patterns and functional roles of these signature genes were subsequently validated in both ccRCC cells and tissues.\nCONCLUSION: KIFs-associated subtypes provide valuable insights into the molecular characteristics and prognostic implications of ccRCC, thereby suggesting potential therapeutic targets for intervention.",
+    "metadata": {
+      "uid": "40660314",
+      "Title": "Kinesin-related genes stratified the prognosis and immune responses of clear cell renal cell carcinoma.",
+      "Published": "2025-07-14",
+      "Copyright Information": "© 2025. The Author(s).",
+      "id": "e6623be0-0f9a-4619-8718-d4dd81c3994a",
+      "source": "pubmed_online",
+      "original_query": "What are the abbreviations and corresponding populations of the 26 populations in the 1,000 human genomes?",
+      "successful_query": "genome human genome"
+    }
+  },
+  {
+    "content": "BACKGROUND: Cis-regulatory modules (CRMs) such as enhancers and silencers play critical roles in virtually all biological processes by enhancing and repressing, respectively, the transcription of their target genes in specific cell types. Although numerous CRMs have been predicted in genomes, identifying their target genes remains a challenge due to low quality of the predicted CRMs and the fact that CRMs often do not regulate their closest genes.\nRESULTS: We developed a method - correlation and physical proximity (CAPP) by leveraging our recently predicted 1.2 M CRMs in the human genome. CAPP is able to not only predict the CRMs' target genes but also their functional types using only chromatin accessibility (CA) and RNA-seq data in a panel of cell/tissue types plus Hi-C data in a few cell types. Applying CAPP to a panel of only 107 cell/tissue types with CA and RNA-seq data available, we predict target genes for 14.3% of the 1.2 M CRMs, of which 1.4% are predicted as both enhancers and silencers (dual functional CRMs), 98.2% as exclusive enhancers, and 0.4% as exclusive silencers. Dual functional CRMs tend to regulate more distant genes than exclusive enhancers and silencers. Enhancers tend to cooperate with other enhancers, whereas silencers typically act independently. Silencers preferentially regulate genes expressed across many cell/tissue types, while enhancers are prone to regulate genes expressed in fewer cell/tissue types.\nCONCLUSIONS: CAPP represents a significant advancement in predicting target genes and functional types of CRMs, especially dual functional CRMs, and different types of CRMs show distinct properties.",
+    "metadata": {
+      "uid": "40660252",
+      "Title": "Prediction of target genes and functional types of cis-regulatory modules in the human genome reveals their distinct properties.",
+      "Published": "2025-07-15",
+      "Copyright Information": "© 2025. The Author(s).",
+      "id": "039c2794-ccde-4858-a1ec-c185fcff9832",
+      "source": "pubmed_online",
+      "original_query": "What are the abbreviations and corresponding populations of the 26 populations in the 1,000 human genomes?",
+      "successful_query": "genome human genome"
+    }
+  },
+  {
+    "content": "BACKGROUND: Head and neck squamous cell carcinoma (HNSCC) ranks as the sixth most prevalent cancer globally, with lymph node metastasis being a primary contributor to poor patient prognosis. Elucidating the molecular mechanisms driving HNSCC lymphatic metastasis is imperative for developing targeted therapeutic strategies and improving patient survival.\nMETHODS: The expression of insulin-like growth factor 2 mRNA-binding protein 1 (IGF2BP1) in HNSCC samples was evaluated using The Cancer Genome Atlas (TCGA), RT-qPCR, Western blotting, and immunohistochemical analysis. The impact of IGF2BP1 on HNSCC cell proliferation was assessed through CCK-8 assay, plate cloning, and EdU assays. Cell motility was examined by Transwell migration and invasion assays. A tumor lymph node metastasis model in nude mice was established to evaluate the role of IGF2BP1 in lymphatic metastasis. Additionally, the regulatory effects of IGF2BP1 on the epithelial-mesenchymal transition (EMT) and the PI3K/AKT/mTOR signaling pathways were investigated using immunofluorescence and Western blotting.\nRESULTS: IGF2BP1 expression was significantly elevated in HNSCC tissues compared to adjacent normal tissues and was strongly associated with lymph node metastasis and poor prognosis. Knockdown of IGF2BP1 suppressed the proliferation, migration, and invasion of HNSCC cells. Furthermore, IGF2BP1 knockdown inhibited tumor growth and lymphatic metastasis in vivo. Mechanistically, IGF2BP1 was found to promote the EMT process by activating the PI3K/AKT/mTOR pathway, thereby enhancing the migratory and invasive capabilities of HNSCC cells.\nCONCLUSIONS: Our findings demonstrate that IGF2BP1 plays a critical role in promoting HNSCC growth and metastasis, highlighting its potential as a therapeutic target.",
+    "metadata": {
+      "uid": "40660234",
+      "Title": "IGF2BP1 promotes the progression of head and neck squamous cell carcinoma by activating PI3K/AKT/mTOR signaling pathway and inducing epithelial-mesenchymal transition.",
+      "Published": "2025-07-14",
+      "Copyright Information": "© 2025. The Author(s).",
+      "id": "236c65d3-2da3-4a9a-ba38-fbcadb26051f",
+      "source": "pubmed_online",
+      "original_query": "What are the abbreviations and corresponding populations of the 26 populations in the 1,000 human genomes?",
+      "successful_query": "genome human genome"
+    }
+  },
+  {
+    "content": "BACKGROUND: Royal Jelly (RJ), an important product of apitherapy, has been traditionally used for its various health benefits, particularly for its anti-inflammatory, antioxidant, and immune-modulatory properties. RJ's ability to reduce oxidative stress, inflammation, and cellular damage has made it a promising candidate for preserving ovarian function and fertility during cancer treatments. Gemcitabine (GEM) is an antimetabolite chemotherapeutic drug known to cause ovarian toxicity. To date, there has been no study evaluating the protective effects of RJ specifically against GEM-induced ovarian damage, making this an original contribution to the field. This study investigated RJ's protective effects against GEM-induced ovarian toxicity in rats.\nMETHOD: Thirty-two female Wistar-Albino rats were divided into four groups: Control, RJ, GEM, and GEM + RJ. GEM (200 mg/kg) was administered intraperitoneally, while RJ (100 mg/kg) was given orally for one week before GEM administration. Histopathological, immunohistochemical, and biochemical analyses were performed to assess ovarian tissue damage, inflammation, and oxidative stress markers.\nRESULTS: GEM treatment caused ovarian damage, including vascular congestion, vacuolization, and Hemorrhage. RJ partially suppressed GEM-induced increases in TNF-α, IL-1β, and IL-6 levels and enhanced AMH expression only in primary follicles. Additionally, RJ only partially lowered FSH levels while increasing LH levels. RJ also counteracted GEM-induced oxidative stress by reducing MDA levels and partially enhancing SOD and CAT activity. GEM caused ovarian damage, including vascular congestion, vacuolization, hemorrhage, inflammation, and oxidative stress.\nCONCLUSIONS: RJ partially reduced inflammatory response and oxidative stress, supported follicular development, increased AMH expression, and alleviated histopathological damage. This original study highlights the potential of RJ as a natural adjunct to preserve ovarian reserve during gemcitabine chemotherapy, while emphasizing the need for further research to determine its long-term effects and optimal dosage.",
+    "metadata": {
+      "uid": "40660206",
+      "Title": "Royal jelly alleviates gemcitabine-induced ovarian toxicity: an investigation on rat models.",
+      "Published": "2025-07-14",
+      "Copyright Information": "© 2025. The Author(s).",
+      "id": "1e704567-bbb3-4422-84fd-96d7c277d4a9",
+      "source": "pubmed_online",
+      "original_query": "What are the abbreviations and corresponding populations of the 26 populations in the 1,000 human genomes?",
+      "successful_query": "genome human genome"
+    }
+  },
+  {
+    "content": "['1', ',', '2', ',', '3', ',', '4', ',', '5', ',', '6', ',', '7', '2']\nThe Tarim Basin in Xinjiang functioned as a crucial meeting point for peoples, cultures, and goods across the Eurasian steppe and served as the easternmost edge for western steppe population dispersal. Despite its importance as a historical crossroads, the prehistoric genetic history of the region remains largely unexamined, which results in a major gap in understanding Eurasian population movements and steppe group expansion to the east. Here, we present genome-wide data from 24 individuals from the western Tarim Basin during the Bronze and Iron Ages. Our findings reveal that Bronze Age populations derived most of their ancestry from pastoralist groups, likely tracing back to the rapid eastward expansion of early Andronovo-related cultures in western steppes. As these steppe groups migrated, they first admixed with Bactria-Margiana Archaeological Complex (BMAC)-related agricultural populations and later with indigenous groups represented by the Bronze Age Tarim mummies, ultimately shaping the genetic landscape of the western Tarim Basin. Many of these individuals are genetically distinct from Andronovo-related groups in western Xinjiang, indicating that at least two separate waves facilitated the entry of steppe populations into Xinjiang. Notably, we identified an Iron Age individual from western Tarim Basin who appears largely unaffected by the steppe influx, pointing to a previously unrecognized direct genetic admixture between BMAC and the indigenous ancestors of the Tarim. This underscores the genetic heterogeneity of the Iron Age Tarim and suggests that a long-lasting indigenous legacy endured for more than 1,000 years.",
+    "metadata": {
+      "uid": "40680736",
+      "Title": "Bronze and Iron Age genomes reveal the integration of diverse ancestries in the Tarim Basin.",
+      "Published": "2025-07-17",
+      "Copyright Information": "Copyright © 2025 Elsevier Inc. All rights reserved.",
+      "id": "5f1ce941-1745-4e31-9cdf-ca21be8cf525",
+      "source": "pubmed_online",
+      "original_query": "What are the populations of the 1,000 human genomes?",
+      "successful_query": "What are the populations of the 1,000 human genomes?"
+    }
+  },
+  {
+    "content": "The oxidative phosphorylation (OxPhos) system is central to metabolism. The more than 90 structural subunits are encoded by different chromosome categories (autosomal, X, and mtDNA). The system is envisioned as an invariant structure between cells and individuals. However, a comprehensive analysis of the 1,000 Genomes Project data reveals unexpected genetic intra-individual variability resulting from the heterozygosity of diploid autosomal genes, while diversity at the population level is generated by variability in mtDNA. We characterized the different levels of structural constriction at evolutionary and population levels for all OxPhos protein residues. To support this analysis, we developed ConScore, a conservation-based predictor of variant impact within OxPhos proteins (area under the receiver operating characteristic curve [ROC-AUC] = 0.97; area under the precision-recall curve [PR-AUC] = 0.94). Notably, for the nuclear-encoded subunits, we found mechanisms limiting individual variability as allelic imbalance or homozygosity bias. Integrating structural, functional, and genetic data, we highlight the significance of each OxPhos protein position, expanding insights into its role in speciation and disease.",
+    "metadata": {
+      "uid": "40614727",
+      "Title": "Structural diversity and evolutionary constraints of oxidative phosphorylation.",
+      "Published": "2025-06-26",
+      "Copyright Information": "Copyright © 2025 The Authors. Published by Elsevier Inc. All rights reserved.",
+      "id": "8c4b6f89-3615-4d5b-b9e1-d192748a6ea8",
+      "source": "pubmed_online",
+      "original_query": "What are the populations of the 1,000 human genomes?",
+      "successful_query": "What are the populations of the 1,000 human genomes?"
+    }
+  },
+  {
+    "content": "['cis', 'cis', 'PMF1', 'PMF1', 'TMEM79', 'GLMP', 'ARHGEF2', 'GLMP', 'ARHGEF2', 'GLMP', 'GLMP', 'MEX3A']\nNEW & NOTEWORTHY\nSevere acute respiratory syndrome coronavirus 2 (SARS-CoV-2), which drove the 2019 coronavirus disease (COVID-19) pandemic, continues to engender inquiries into the role of host genetic factors in disease susceptibility. Despite the identification of over 1,000 genes potentially associated with SARS-CoV-2 and COVID-19, the mechanisms connecting genetic variants to phenotype remain elusive. To shed light on these mechanisms, we undertook an integrated analysis, merging data from whole genome association analyses of COVID-19 with methylome and transcriptomic. The study includes African American adults from the GENE-FORECAST study, encompassing 371 individuals with whole genome sequencing (WGS), 203 with DNA methylation, and 321 with RNA sequencing (RNA-Seq) of blood. About 53.3% of participants reported COVID-19. Significant loci associated with COVID-19 were examined within the framework of methylation quantitative trait loci (mQTL), which are located near the gene-of-orig (-mQTL) and expression quantitative trait loci (eQTL), which are located near the gene-of-origin (-eQTL), enabling analysis to assess mediators between genetic variants and COVID-19 status. Our analysis identified four intronic variants and confirmed a missense variant, rs1052067, in  associated with COVID-19. Causal mediation analysis revealed that the combination of genetic variants within , epigenomics, and transcriptomics mapped four pathways influencing COVID-19 status. These pathways include: rs9659072→DNAm at chr1:156285845 (annotated to )→ENSG00000198715:13 (annotated to glycosylated lysosomal membrane protein, ); rs12083543→DNAm at chr1:155951748 ()→ENSG00000198715:13 (); rs1052067→DNAm at chr1:155951748 ()→ENSG00000198715:13 (); rs1543294→ENSG00000198715:13 ()→DNAm at chr1:156077518 (). Through integrated multiomics analyses, we identified genetic variants whose effects on COVID-19 susceptibility are mediated by changes in DNA methylation and mRNA expression. These findings offer insights into potential mechanistic pathways that merit further exploration. The study investigates host genetic factors influencing COVID-19 susceptibility by integrating WGS, epigenomics, and transcriptomic data. It identified that PMF1 is linked to COVID-19. Mediation analysis revealed that genetic variants in PMF1 affect COVID-19 status via combinations of one transcript (annotated to GLMP) and three DNAm sites (annotated to ARHGEF2, TMEM79, MEX3A). The findings highlight the role of lysosomal pathways and transmembrane proteins in disease susceptibility, offering new insight into potential therapeutic targets for COVID-19.",
+    "metadata": {
+      "uid": "40591496",
+      "Title": "Multiomics analyses of the complex interplay between genetic variants, DNA methylation, and gene expression in COVID-19.",
+      "Published": "2025-07-01",
+      "Copyright Information": "",
+      "id": "bcac9b48-80f6-4227-b30d-cb818124ec15",
+      "source": "pubmed_online",
+      "original_query": "What are the populations of the 1,000 human genomes?",
+      "successful_query": "What are the populations of the 1,000 human genomes?"
+    }
+  },
+  {
+    "content": "['1', '2', ',', '3', '4', ',', '5', ',', '6', '7']\nThe invasion of specialized ecological niches can cause drastic changes to selection regimes, resulting in genomic and phenotypic transformation. High-altitude habitats offer an excellent opportunity to investigate the genetic basis of local adaptation, as the repeated specialization of multiple lineages for high altitude has produced striking examples of convergent evolution, adaptation, and changes in their underlying genes. Although enlightening, this focus on adaptation has left aspects of evolution in high-altitude locations understudied-including the role of gene loss and pseudogenization, maladaptation and trait loss, and physiological aspects outside of respiration and gas exchange. To characterize how mammals responded to high altitude in a new, unbiased way, we screened the genomes of 27 species living exclusively at high altitude (>1,000-1,500 m) and their lowland relatives for inactivated pseudogenes or lost genes. Genes that convergently lost function in high-altitude species were highly enriched for olfactory receptor (OR) genes, with an average reduction of ∼23% of OR repertoire in high-altitude species. No such trend was found for genes involved in pheromone detection and taste perception. In addition to OR loss, cranial endocasts show the brains of high-altitude species have on average ∼18% smaller olfactory bulbs relative to lowland relatives. Together, these repeated evolutionary outcomes suggest a general relaxation of constraint on olfaction at altitude, perhaps due to reduced odorant diversity in high-altitude environments or reduced effectiveness of mammalian olfactory physiology in thin, dry, or cold air.",
+    "metadata": {
+      "uid": "40562037",
+      "Title": "Convergent reduction of olfactory genes and olfactory bulb size in mammalian species at altitude.",
+      "Published": "2025-06-24",
+      "Copyright Information": "Copyright © 2025 Elsevier Inc. All rights reserved.",
+      "id": "789c2b99-c8da-4425-be46-0e730bcb8ebc",
+      "source": "pubmed_online",
+      "original_query": "What are the populations of the 1,000 human genomes?",
+      "successful_query": "What are the populations of the 1,000 human genomes?"
+    }
+  },
+  {
+    "content": "BACKGROUND: Genome editing in human iPS cells is a powerful approach in regenerative medicine. CRISPR-Cas9 is the most common genome editing tool, but it often induces byproduct insertions and deletions in addition to the desired edits. Therefore, genome editing of iPS cells produces diverse genotypes. Existing assays mostly analyze genome editing results in cell populations, but not in single cells. However, systematic profiling of genome editing outcomes in single iPS cells was lacking. Due to the high mortality of human iPS cells as isolated single cells, it has been difficult to analyze genome-edited iPS cell clones in a high-throughput manner.\nMETHODS: In this study, we developed a method for high-throughput iPS cell clone isolation based on the precise robotic picking of cell clumps derived from single cells grown in extracellular matrices. We first introduced point mutations into human iPS cell pools by CRISPR-Cas9. These genome-edited human iPS cells were dissociated and cultured as single cells in extracellular matrices to form cell clumps, which were then isolated using a cell-handling robot to establish genome-edited human iPS cell clones. Genome editing outcomes in these clones were analyzed by amplicon sequencing to determine the genotypes of individual iPS cell clones. We identified and distinguished the sequences of different insertions and deletions induced by CRISPR-Cas9 while determining their genotypes. We also cryopreserved the established iPS cell clones and recovered them after determining their genotypes.\nRESULTS: We analyzed over 1,000 genome-edited iPS cell clones and found that homozygous editing was much more frequent than heterozygous editing. We also observed frequent homozygous induction of identical genetic manipulations, including insertions and deletions, such as 1-bp insertions and 8-bp deletions. Moreover, we successfully cryopreserved and then recovered genome-edited iPS cell clones, demonstrating that our cell-handling robot-based method is valuable in establishing genome-edited iPS cell clones.\nCONCLUSIONS: This study revealed a previously unknown property of genome editing in human iPS cells that identical sequence manipulations tend to be induced in both copies of the target sequence in individual cells. Our new cloning method and findings will facilitate the application of genome editing to human iPS cells.",
+    "metadata": {
+      "uid": "40483517",
+      "Title": "High-throughput robotic isolation of human iPS cell clones reveals frequent homozygous induction of identical genetic manipulations by CRISPR-Cas9.",
+      "Published": "2025-06-07",
+      "Copyright Information": "© 2025. The Author(s).",
+      "id": "a09025b7-3382-4a6e-a1d8-3f73d342db6b",
+      "source": "pubmed_online",
+      "original_query": "What are the populations of the 1,000 human genomes?",
+      "successful_query": "What are the populations of the 1,000 human genomes?"
+    }
+  }
+]

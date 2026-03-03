@@ -1,0 +1,100 @@
+Demes - Demographic Model Specification
+=========================================
+
+Demes is a standard format for specifying demographic models,
+compatible with msprime, moments, dadi, and fwdpy11.
+
+## Installation
+pip install demes demesdraw
+
+## YAML Specification Format
+
+### Simple Two-Population Model
+```yaml
+description: Two-population split model
+time_units: generations
+demes:
+  - name: ancestral
+    description: Ancestral population
+    epochs:
+      - start_size: 10000
+        end_time: 1000
+  - name: pop1
+    description: Population 1
+    ancestors: [ancestral]
+    epochs:
+      - start_size: 5000
+  - name: pop2
+    description: Population 2
+    ancestors: [ancestral]
+    epochs:
+      - start_size: 8000
+migrations:
+  - demes: [pop1, pop2]
+    rate: 1e-4
+```
+
+### Out-of-Africa Model
+```yaml
+description: Three-population Out-of-Africa model
+time_units: generations
+demes:
+  - name: ANC
+    epochs:
+      - start_size: 7300
+        end_time: 5600
+  - name: YRI
+    ancestors: [ANC]
+    epochs:
+      - start_size: 12300
+  - name: OOA
+    ancestors: [ANC]
+    epochs:
+      - start_size: 2100
+        end_time: 848
+  - name: CEU
+    ancestors: [OOA]
+    epochs:
+      - start_size: 1000
+        end_size: 29725
+  - name: CHB
+    ancestors: [OOA]
+    epochs:
+      - start_size: 510
+        end_size: 54090
+migrations:
+  - demes: [YRI, OOA]
+    rate: 2.5e-5
+  - demes: [CEU, CHB]
+    rate: 9.6e-5
+    start_time: 848
+```
+
+## Python API
+```python
+import demes
+import demesdraw
+
+# Load model
+graph = demes.load("model.yaml")
+
+# Visualize
+fig, ax = demesdraw.tubes(graph, log_time=True)
+fig.savefig("demographic_model.png", dpi=300)
+
+# Convert to msprime
+import msprime
+demography = msprime.Demography.from_demes(graph)
+ts = msprime.sim_ancestry(samples={"YRI": 50, "CEU": 50}, demography=demography, sequence_length=1e6, recombination_rate=1e-8)
+
+# Convert to moments
+import moments
+fs = moments.Spectrum.from_demes(graph, sampled_demes=["YRI", "CEU"], sample_sizes=[20, 20])
+```
+
+## Key Concepts
+- **epochs**: Time intervals with specific population size/growth
+- **ancestors**: Parent populations in the demographic graph
+- **migrations**: Continuous gene flow between contemporary populations
+- **pulses**: Instantaneous admixture events (mass migration)
+- **time_units**: "generations" or "years" (with generation_time specified)

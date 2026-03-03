@@ -1,0 +1,58 @@
+# Goal: This is the obs file for the three populations. I hope to build a migration and separation model based on this obs file.
+# Generated from output 007
+# Successfully validated
+
+demes:
+- description: Ancestral population
+  epochs:
+  - end_time: 20000
+    start_size: 10000
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Ancestral population of POP1 and POP2
+  epochs:
+  - end_time: 5000
+    start_size: 10000
+  name: ANC12
+- ancestors:
+  - ANC12
+  description: Population 1
+  epochs:
+  - start_size: 10000
+  name: POP1
+- ancestors:
+  - ANC12
+  description: Population 2
+  epochs:
+  - start_size: 10000
+  name: POP2
+- ancestors:
+  - ancestral
+  description: Population 3
+  epochs:
+  - start_size: 10000
+  name: POP3
+description: Migration and separation model for three populations based on FastSimCoal2
+  parameters
+generation_time: 1
+migrations:
+- dest: POP2
+  rate: 0.001
+  source: POP1
+- dest: POP3
+  rate: 0.0001
+  source: POP1
+- dest: POP1
+  rate: 0.001
+  source: POP2
+- dest: POP3
+  rate: 0.0001
+  source: POP2
+- dest: POP1
+  rate: 0.0001
+  source: POP3
+- dest: POP2
+  rate: 0.0001
+  source: POP3
+time_units: generations

@@ -1,0 +1,1 @@
+./fsc28 -t ./output/000/ana/1popDNArand.tpl -n10 -e ./output/000/ana/1popDNArand.est -E 1000 -G -g 

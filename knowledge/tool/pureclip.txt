@@ -1,0 +1,33 @@
+To run PureCLIP in basic mode, it requires BAM and BAI files, the reference genome and a specified output file:
+
+```bash
+pureclip -i aligned.prepro.R2.bam -bai aligned.prepro.R2.bam.bai -g ref.hg19.fa -iv 'chr1;chr2;chr3;' -nt 10 -o PureCLIP.crosslink_sites.bed
+```
+
+With `-iv` the chromosomes (or transcripts) can be specified that will be used to learn the parameters of PureCLIP’s HMM. This reduces the memory consumption and runtime. 
+
+### Input Control Mode
+To run PureCLIP with input control data:
+
+```bash
+pureclip -i aligned.prepro.R2.bam -bai aligned.prepro.R2.bam.bai -g ref.hg19.fa -iv 'chr1;chr2;chr3;' -nt 10 -o PureCLIP.crosslink_sites
+```
+
+### CL-Motif Scores
+To address crosslinking sequence bias, CL-motif scores can be incorporated.
+
+#### Compute CL-Motif Scores:
+```bash
+wget -O motifs.txt https://raw.githubusercontent.com/skrakau/PureCLIP_data/master/common_CL-motifs/dreme.w10.k4.txt
+wget -O motifs.xml https://raw.githubusercontent.com/skrakau/PureCLIP_data/master/common_CL-motifs/dreme.w10.k4.xml
+compute_CLmotif_scores.sh ref.hg19.fa aligned.prepro.R2.bam motifs.xml motifs.txt fimo_clmotif_occurences.bed
+```
+
+#### Run PureCLIP with CL-Motif:
+```bash
+pureclip -i aligned.prepro.R2.bam -bai aligned.prepro.R2.bam.bai -g ref.hg19.fa -o PureCLIP.crosslink_sites.cov_CLmotifs.bed -nt 10 -iv 'chr1;chr2;chr3;' -nim 4 -fis fimo_clmotif_occurences.bed
+```
+
+### Output
+- **Crosslink sites**: BED6 with chr, start, end, state, score, strand.
+- **Binding regions** (optional): merged crosslink sites with scores if `-or` and `-dm` provided.

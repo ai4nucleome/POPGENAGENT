@@ -1,0 +1,69 @@
+EIGENSOFT/smartPCA - Principal Component Analysis for Population Genetics
+=========================================================================
+
+EIGENSOFT provides the smartPCA program for computing PCA on genotype data,
+with built-in outlier detection and correction for LD.
+
+## Installation
+conda install -c bioconda eigensoft
+
+## File Format Conversion (PLINK to EIGENSTRAT)
+
+### Step 1: Convert to PED format
+plink --bfile input --recode 12 --out pca_temp
+
+### Step 2: Create .ind file
+awk '{print $1"_"$2, $1"_"$2, "U"}' pca_temp.ped > pca.ind
+
+### Step 3: Create parameter file (par.convertf)
+```
+genotypename: pca_temp.ped
+snpname:      pca_temp.map
+indivname:    pca.ind
+outputformat: EIGENSTRAT
+genotypeoutname: pca.geno
+snpoutname:      pca.snp
+indivoutname:    pca.ind
+```
+
+### Step 4: Run convertf
+convertf -p par.convertf
+
+## Running smartPCA
+
+### Parameter file (par.smartpca)
+```
+genotypename: pca.geno
+snpname:      pca.snp
+indivname:    pca.ind
+evecoutname:  pca_results.evec
+evaloutname:  pca_results.eval
+numoutevec:   20
+numoutlieriter: 5
+lsqproject:   YES
+numthreads:   8
+```
+
+### Run
+smartpca -p par.smartpca > smartpca.log 2>&1
+
+## Output Files
+- pca_results.evec: Eigenvectors (PC scores per individual)
+  Format: sample_id PC1 PC2 ... PC20 population
+- pca_results.eval: Eigenvalues (variance explained by each PC)
+- smartpca.log: Log file with Tracy-Widom statistics for significance
+
+## Advanced Parameters
+- lsqproject: YES    # Project samples onto PCs (for missing data)
+- outliermode: 2      # Remove outliers iteratively
+- numoutlieriter: 5   # Number of outlier removal iterations
+- killr2: YES         # Remove SNPs in LD (default: NO)
+- r2thresh: 0.2       # LD threshold when killr2=YES
+- autoshrink: YES     # Apply shrinkage correction
+- shrinkmode: 1       # Shrinkage mode
+
+## Interpreting Results
+- PC1 typically separates major continental groups
+- PC2 captures secondary structure (e.g., European-Asian within non-African)
+- Tracy-Widom test: statistically significant PCs (p < 0.05)
+- Variance explained by top PCs indicates strength of population structure

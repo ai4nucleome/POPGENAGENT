@@ -1,0 +1,17 @@
+{
+            "step_number": 5,
+            "description": "Perform LD pruning again to prepare genetic loci with enhanced independence for advanced analyses. This second round of LD pruning ensures that the dataset is optimally prepared for computationally intensive analyses such as PCA and ADMIXTURE, where marker independence is crucial for accurate results.",
+            "input_filename": [
+                "./output/030/unrelated_1000GP.bed: PLINK bed file with relatives removed",
+                "./output/030/unrelated_1000GP.bim: PLINK bim file with relatives removed",
+                "./output/030/unrelated_1000GP.fam: PLINK fam file with relatives removed"
+            ],
+            "output_filename": [
+                "./output/030/final_ld_pruned_1000GP.bed: final LD-pruned PLINK bed file",
+                "./output/030/final_ld_pruned_1000GP.bim: final LD-pruned PLINK bim file",
+                "./output/030/final_ld_pruned_1000GP.fam: final LD-pruned PLINK fam file"
+            ],
+            "tools": "PLINK"
+        },
+
+plink --bfile ./output/030/unrelated_1000GP --extract ./output/030/strict_ldprune.prune.in --make-bed --out ./output/030/final_ld_pruned_1000GP

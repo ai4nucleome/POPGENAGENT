@@ -1,0 +1,137 @@
+======================================================================
+DEMOGRAPHIC MODEL SUMMARY
+======================================================================
+
+BASIC INFORMATION
+----------------------------------------
+Description: Out-of-Africa demographic model with YRI, CEU, CHB populations
+Time units: generations
+Generation time: 1 years
+Number of demes: 5
+Number of migrations: 8
+Number of pulses: 0
+
+DEMES (POPULATIONS)
+----------------------------------------
+
+Deme: ANC
+  Description: Ancestral African population
+  Start time: inf
+  End time: 5600
+  Number of epochs: 1
+    Epoch 1:
+      Time interval: inf -> 5600
+      Start size: 7300
+      End size: 7300
+      Size function: constant
+
+Deme: YRI
+  Description: Yoruba in Ibadan, Nigeria
+  Ancestors: ANC
+  Start time: 5600
+  End time: 0
+  Number of epochs: 1
+    Epoch 1:
+      Time interval: 5600 -> 0
+      Start size: 12300
+      End size: 12300
+      Size function: constant
+
+Deme: OOA
+  Description: Out-of-Africa ancestral population
+  Ancestors: ANC
+  Start time: 5600
+  End time: 848
+  Number of epochs: 1
+    Epoch 1:
+      Time interval: 5600 -> 848
+      Start size: 2100
+      End size: 2100
+      Size function: constant
+
+Deme: CEU
+  Description: Utah residents with Northern and Western European ancestry
+  Ancestors: OOA
+  Start time: 848
+  End time: 0
+  Number of epochs: 1
+    Epoch 1:
+      Time interval: 848 -> 0
+      Start size: 1000
+      End size: 29725
+      Size function: exponential
+
+Deme: CHB
+  Description: Han Chinese in Beijing, China
+  Ancestors: OOA
+  Start time: 848
+  End time: 0
+  Number of epochs: 1
+    Epoch 1:
+      Time interval: 848 -> 0
+      Start size: 510
+      End size: 54090
+      Size function: exponential
+
+MIGRATIONS (CONTINUOUS GENE FLOW)
+----------------------------------------
+
+Migration 1:
+  Source: YRI
+  Dest: OOA
+  Rate: 2.5e-05
+  Start time: 5600
+  End time: 848
+
+Migration 2:
+  Source: OOA
+  Dest: YRI
+  Rate: 2.5e-05
+  Start time: 5600
+  End time: 848
+
+Migration 3:
+  Source: YRI
+  Dest: CEU
+  Rate: 2.5e-05
+  Start time: 848
+  End time: 0
+
+Migration 4:
+  Source: CEU
+  Dest: YRI
+  Rate: 2.5e-05
+  Start time: 848
+  End time: 0
+
+Migration 5:
+  Source: YRI
+  Dest: CHB
+  Rate: 7.8e-06
+  Start time: 848
+  End time: 0
+
+Migration 6:
+  Source: CHB
+  Dest: YRI
+  Rate: 7.8e-06
+  Start time: 848
+  End time: 0
+
+Migration 7:
+  Source: CEU
+  Dest: CHB
+  Rate: 9.6e-05
+  Start time: 848
+  End time: 0
+
+Migration 8:
+  Source: CHB
+  Dest: CEU
+  Rate: 9.6e-05
+  Start time: 848
+  End time: 0
+
+======================================================================
+END OF SUMMARY
+======================================================================

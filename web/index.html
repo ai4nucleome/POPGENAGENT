@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>PopGenAgent</title>
+    <link rel="icon" href="/static/icon.png">
+    
+    <!-- Performance optimization -->
+    <meta name="theme-color" content="#2d72ff">
+    <meta name="description" content="PopGenAgent - AI-Powered Population Genetics Analysis Suite">
+    
+    <!-- DNS prefetch & preconnect -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Font loading optimization - use display=swap to avoid FOIT -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Critical CSS inline -->
+    <style>
+        /* CSS Reset - minimal */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body, #app { width: 100%; height: 100%; overflow-x: hidden; }
+        body { font-family: 'Outfit', system-ui, -apple-system, sans-serif; }
+        
+        /* Loading animation container */
+        #app-loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            z-index: 9999;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        
+        #app-loading.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Logo */
+        .loading-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .loading-logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b7ffb, #8a52fc);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .loading-logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+        
+        .loading-logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 127, 251, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 5px rgba(138, 82, 252, 0.3); }
+        }
+        
+        /* Progress bar */
+        .loading-progress {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b7ffb, #8a52fc, #3b7ffb);
+            background-size: 200% 100%;
+            animation: progressShimmer 1.5s ease-in-out infinite;
+            border-radius: 4px;
+            width: 30%;
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes progressShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Loading status text */
+        .loading-status {
+            font-size: 13px;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Skeleton screen preview */
+        .loading-skeleton {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        #app-loading.show-skeleton .loading-skeleton {
+            opacity: 1;
+        }
+        
+        #app-loading.show-skeleton .loading-logo,
+        #app-loading.show-skeleton .loading-progress,
+        #app-loading.show-skeleton .loading-status {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Optimized loading animation -->
+    <div id="app-loading">
+        <div class="loading-logo">
+            <div class="loading-logo-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+            </div>
+            <span class="loading-logo-text">PopGenAgent</span>
+        </div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="loading-status" id="loading-status">Initializing...</div>
+    </div>
+    
+    <div id="app"></div>
+    
+    <!-- Main script -->
+    <script type="module" src="/src/main.ts"></script>
+    
+    <!-- Loading progress control -->
+    <script>
+        (function() {
+            var progress = 0;
+            var progressBar = document.getElementById('progress-bar');
+            var statusText = document.getElementById('loading-status');
+            var loader = document.getElementById('app-loading');
+            
+            var stages = [
+                { progress: 20, text: 'Loading modules...' },
+                { progress: 40, text: 'Initializing Vue...' },
+                { progress: 60, text: 'Loading components...' },
+                { progress: 80, text: 'Connecting to server...' },
+                { progress: 95, text: 'Almost ready...' }
+            ];
+            
+            var stageIndex = 0;
+            
+            function updateProgress() {
+                if (stageIndex < stages.length) {
+                    var stage = stages[stageIndex];
+                    progress = stage.progress;
+                    if (progressBar) progressBar.style.width = progress + '%';
+                    if (statusText) statusText.textContent = stage.text;
+                    stageIndex++;
+                    // Speed up progress update
+                    setTimeout(updateProgress, 200 + Math.random() * 150);
+                }
+            }
+            
+            // Start progress animation
+            setTimeout(updateProgress, 50);
+            
+            // Listen for Vue mount completion
+            window.addEventListener('app-mounted', function() {
+                if (progressBar) progressBar.style.width = '100%';
+                if (statusText) statusText.textContent = 'Ready!';
+                setTimeout(function() {
+                    if (loader) loader.classList.add('fade-out');
+                }, 150);
+            });
+            
+            // Timeout protection - force hide after 5 seconds (reduce wait time)
+            setTimeout(function() {
+                if (loader && !loader.classList.contains('fade-out')) {
+                    loader.classList.add('fade-out');
+                }
+            }, 5000);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# Goal: This is the obs file for the three populations,which are CDX,PJL,STU from 1000GP. I hope to build a migration and separation model based on this obs file.I speculate that the CDX population separated from the other two populations first, and PJL and STU separated 10,000 years ago.
+# Generated from output 044
+# Successfully validated
+
+demes:
+- description: Ancestral population
+  epochs:
+  - end_time: 28157
+    start_size: 36701
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Chinese Dai in Xishuangbanna, China
+  epochs:
+  - start_size: 10245
+  name: CDX
+- ancestors:
+  - ancestral
+  description: Ancestral population of PJL and STU
+  epochs:
+  - end_time: 1984
+    start_size: 27511
+  name: ANC23
+- ancestors:
+  - ANC23
+  description: Punjabi from Lahore, Pakistan
+  epochs:
+  - start_size: 1151
+  name: PJL
+- ancestors:
+  - ANC23
+  description: Sri Lankan Tamil in the UK
+  epochs:
+  - start_size: 44472
+  name: STU
+description: Migration and separation model for CDX, PJL, and STU populations from
+  1000GP based on FastSimCoal2 maximum likelihood estimates
+generation_time: 1
+migrations:
+- dest: PJL
+  rate: 1.22849e-06
+  source: CDX
+- dest: STU
+  rate: 5.88551e-05
+  source: CDX
+- dest: CDX
+  rate: 1.61058e-06
+  source: PJL
+- dest: STU
+  rate: 2.23198e-06
+  source: PJL
+- dest: CDX
+  rate: 3.26897e-06
+  source: STU
+time_units: generations

@@ -1,0 +1,608 @@
+# samtools – Utilities for the Sequence Alignment/Map (SAM) format
+
+## NAME
+**samtools** – A suite of programs for manipulating alignments in the SAM (Sequence Alignment/Map), BAM, and CRAM formats.
+
+## SYNOPSIS (Selected Examples)
+
+```bash
+samtools addreplacerg -r 'ID:fish' -r 'LB:1334' -r 'SM:alpha' -o output.bam input.bam
+samtools ampliconclip -b bed.file input.bam
+samtools ampliconstats primers.bed in.bam
+samtools bedcov aln.sorted.bam
+samtools calmd in.sorted.bam ref.fasta
+samtools cat out.bam in1.bam in2.bam in3.bam
+samtools collate -o aln.name_collated.bam aln.sorted.bam
+samtools consensus -o out.fasta in.bam
+samtools coverage aln.sorted.bam
+samtools cram-size -v -o out.size in.cram
+samtools depad input.bam
+samtools depth aln.sorted.bam
+samtools dict -a GRCh38 -s "Homo sapiens" ref.fasta
+samtools faidx ref.fasta
+samtools fasta input.bam > output.fasta
+samtools fastq input.bam > output.fastq
+samtools fixmate in.namesorted.sam out.bam
+samtools flags PAIRED,UNMAP,MUNMAP
+samtools flagstat aln.sorted.bam
+samtools fqidx ref.fastq
+samtools head in.bam
+samtools idxstats aln.sorted.bam
+samtools import input.fastq > output.bam
+samtools index aln.sorted.bam
+samtools markdup in.algnsorted.bam out.bam
+samtools merge out.bam in1.bam in2.bam in3.bam
+samtools mpileup -f ref.fasta -r chr3:1,000-2,000 in1.bam in2.bam
+samtools phase input.bam
+samtools quickcheck in1.bam in2.cram
+samtools reference -o ref.fa in.cram
+samtools reheader in.header.sam in.bam > out.bam
+samtools reset -o /tmp/reset.bam processed.bam
+samtools samples input.bam
+samtools sort -T /tmp/aln.sorted -o aln.sorted.bam aln.bam
+samtools split merged.bam
+samtools stats aln.sorted.bam
+samtools targetcut input.bam
+samtools tview aln.sorted.bam ref.fasta
+samtools view -bt ref_list.txt -o aln.bam aln.sam.gz
+```
+
+## BRIEF DESCRIPTION
+Samtools converts between SAM/BAM/CRAM formats, sorts and merges alignments, indexes them for fast random access, and retrieves reads within specific genomic regions. It can read/write compressed data, works well in pipelines, and supports remote file access.
+
+## SELECTED COMMANDS
+
+### samtools view
+```bash
+samtools view [options] in.bam [region...]
+```
+- Converts input to SAM/BAM/CRAM.
+- If indexed and region(s) are specified, outputs only alignments overlapping those regions.
+
+### samtools tview
+```bash
+samtools tview in.sorted.bam [ref.fasta]
+```
+- Text-based viewer for alignments. Press `?` for help.
+
+### samtools quickcheck
+```bash
+samtools quickcheck in.bam in.cram
+```
+- Quickly checks if files are intact (e.g., valid header, EOF block in BAM).
+
+### samtools head
+```bash
+samtools head in.bam
+```
+- Prints file headers and optionally the first few alignments.
+
+### samtools index
+```bash
+samtools index aln.bam
+```
+- Indexes a coordinate-sorted BAM or CRAM file for fast region queries.
+
+### samtools sort
+```bash
+samtools sort -o aln.sorted.bam aln.bam
+```
+- Sorts alignments by coordinate (default) or by name (`-n`).
+
+### samtools collate
+```bash
+samtools collate -o aln.name_collated.bam aln.sorted.bam
+```
+- Groups reads by name, without full sorting.
+
+### samtools idxstats
+```bash
+samtools idxstats aln.sorted.bam
+```
+- Reports reference sequence length, mapped reads, and unmapped reads.
+
+### samtools flagstat
+```bash
+samtools flagstat aln.sorted.bam
+```
+- Gives overall alignment statistics (number of mapped/unmapped reads, duplicates, etc.).
+
+### samtools mpileup
+```bash
+samtools mpileup -f ref.fasta in1.bam in2.bam
+```
+- Generates textual pileup of reads.
+
+### samtools consensus
+```bash
+samtools consensus -o out.fasta in.bam
+```
+- Creates consensus sequence from alignment data.
+
+### samtools coverage
+```bash
+samtools coverage aln.sorted.bam
+```
+- Produces coverage stats per chromosome or region.
+
+### samtools merge
+```bash
+samtools merge out.bam in1.bam in2.bam
+```
+- Merges multiple sorted BAM/CRAM files into one.
+
+### samtools split
+```bash
+samtools split merged.bam
+```
+- Splits one file into separate files by read group.
+
+### samtools cat
+```bash
+samtools cat out.bam in1.bam in2.bam
+```
+- Concatenates BAM/CRAM files of the same format.
+
+### samtools fastq/fasta
+```bash
+samtools fastq in.bam > out.fastq
+samtools fasta in.bam > out.fasta
+```
+- Converts BAM/CRAM to FASTQ or FASTA.
+
+### samtools faidx
+```bash
+samtools faidx ref.fasta
+```
+- Indexes a FASTA file or extracts subsequences if regions are given.
+
+### samtools fqidx
+```bash
+samtools fqidx ref.fastq
+```
+- Similar to faidx but for FASTQ (small files only).
+
+### samtools calmd
+```bash
+samtools calmd aln.bam ref.fasta
+```
+- Adds or updates the MD tag.
+
+### samtools fixmate
+```bash
+samtools fixmate in.nameSrt.bam out.bam
+```
+- Fills in mate coordinates, ISIZE, and flags from a name-sorted file.
+
+### samtools markdup
+```bash
+samtools markdup in.algnsorted.bam out.bam
+```
+- Marks duplicate reads after fixmate.
+
+### samtools reheader
+```bash
+samtools reheader in.header.sam in.bam > out.bam
+```
+- Replaces the header without re-converting the entire file.
+
+### samtools stats
+```bash
+samtools stats aln.sorted.bam
+```
+- Collects alignment statistics, output can be plotted with plot-bamstats.
+
+---
+
+## AUTHOR & LINKS
+- Original author: Heng Li (Sanger Institute).
+- Project page: [http://www.htslib.org/](http://www.htslib.org/)
+- Code repositories:
+  - [Samtools GitHub](https://github.com/samtools/samtools)
+  - [HTSlib GitHub](https://github.com/samtools/htslib)
+  - [Bcftools GitHub](http://samtools.github.io/bcftools)
+
+
+---
+
+## Synopsis
+This tutorial demonstrates how to explore, process, and manipulate SAM/BAM files using **samtools**. We will walk through installing samtools, creating a demo directory, converting between SAM and BAM formats, sorting, indexing, and selectively viewing alignments.
+
+---
+
+## Installing samtools
+```bash
+cd ~
+mkdir src          # optional if you do not already have a src directory
+cd ~/src
+
+git clone https://github.com/samtools/htslib
+git clone https://github.com/samtools/samtools
+
+cd samtools
+make
+cp samtools ~/bin  # move the samtools binary to your PATH
+```
+
+---
+
+## Setup
+1. **Create** a new directory from your home directory:
+
+   ```bash
+   cd ~
+   mkdir samtools-demo
+   cd samtools-demo
+   ```
+2. **Download** the sample SAM file and decompress:
+
+   ```bash
+   curl https://s3.amazonaws.com/samtools-tutorial/sample.sam.gz > sample.sam.gz
+   gzip -d sample.sam.gz
+   ```
+
+---
+
+## samtools help
+Typing `samtools` alone displays the available subcommands. Examples:
+```bash
+samtools view
+samtools sort
+samtools depth
+```
+
+---
+
+## Converting SAM to BAM (`samtools view`)
+1. **Convert** the SAM file to BAM:
+   ```bash
+   samtools view -S -b sample.sam > sample.bam
+   ```
+   Here:
+   - `-S` specifies the input is SAM.
+   - `-b` specifies to output BAM.
+   - The `>` redirect writes to `sample.bam`.
+2. **Check** the BAM contents (by converting back to SAM and showing only the first few lines):
+   ```bash
+   samtools view sample.bam | head
+   ```
+
+---
+
+## Sorting alignments (`samtools sort`)
+1. **Sort** the BAM so alignments are in order by genomic position:
+   ```bash
+   samtools sort sample.bam -o sample.sorted.bam
+   ```
+2. **Inspect** a few lines:
+   ```bash
+   samtools view sample.sorted.bam | head
+   ```
+   Now the coordinates should appear in ascending order.
+
+---
+
+## Indexing a sorted BAM (`samtools index`)
+1. **Index** the sorted BAM:
+   ```bash
+   samtools index sample.sorted.bam
+   ```
+2. **Check** for the newly created index file (`.bai` extension):
+   ```bash
+   ls
+   ```
+3. **Use** the index to extract alignments from chromosome 1, positions `33,000,000–34,000,000`:
+   ```bash
+   samtools view sample.sorted.bam 1:33000000-34000000
+   ```
+   And count how many alignments are in that region:
+   ```bash
+   samtools view sample.sorted.bam 1:33000000-34000000 | wc -l
+   ```
+
+---
+
+## More on `samtools view`
+### Viewing a subset of alignments
+
+- **Print** the first five lines:
+  ```bash
+  samtools view sample.sorted.bam | head -n 5
+  ```
+- **Make FLAG more readable** with `-X`:
+  ```bash
+  samtools view -X sample.sorted.bam | head -n 5
+  ```
+  (Try `samtools view -?` for help on all options.)
+
+### Counting alignments
+```bash
+samtools view sample.sorted.bam | wc -l
+```
+
+### Inspecting the header
+```bash
+samtools view -H sample.sorted.bam
+```
+
+### Filtering by FLAG
+- **Proper pairs** only (`-f 0x2`):
+  ```bash
+  samtools view -f 0x2 sample.sorted.bam | wc -l
+  ```
+- **NOT properly paired** (`-F 0x2`):
+  ```bash
+  samtools view -F 0x2 sample.sorted.bam | wc -l
+  ```
+  `-F` indicates **exclude** flags. The counts of `-f 0x2` plus `-F 0x2` should sum to the total number of alignments.
+
+---
+
+## Summary
+1. **Install** samtools.
+2. **Convert** SAM→BAM.
+3. **Sort** by genomic position.
+4. **Index** to enable region queries.
+5. **View** subsets of data based on coordinates or specific flags.
+6. **Inspect** headers and other metadata.
+
+This workflow covers basic operations required for many downstream applications (e.g., variant calling or visualization in IGV). For more details, consult the [samtools documentation](https://www.htslib.org/).
+
+---
+
+## FASTQ to BAM/CRAM
+Modern sequencing instruments typically produce *unaligned* data in FASTQ format. We can store unaligned data in BAM or CRAM to include valuable metadata (e.g., headers, auxiliary tags), but the focus here is on producing a **sorted, aligned** BAM or CRAM file.
+
+---
+
+## Two Main Approaches
+1. **Alignment / mapping** to a known reference.
+2. **De-novo assembly** (not covered in detail here).
+
+---
+
+## Example Workflow for Alignment
+
+This pipeline takes paired FASTQ reads, aligns them to a reference using Minimap2, and produces a sorted, duplicate-marked BAM or CRAM.
+
+### Steps Overview
+1. **Map / align**
+2. **Fix mate-pair issues** (e.g., with `samtools fixmate`)
+3. **Mark duplicates (part 1)** – add tags needed for later duplication marking
+4. **Sort** to positional order
+5. **Mark duplicates (part 2)** – final marking of duplicates
+6. **Convert** to final file format (BAM or CRAM)
+
+### Step 1: Mapping
+```bash
+minimap2 -t 8 -a -x sr C.Elegans.fa \
+  SRR065390_1.fastq SRR065390_2.fastq -o CE.sam
+```
+- `-t 8`: uses 8 threads.
+- `-a`: output in SAM.
+- `-x sr`: sets Minimap2 presets for paired-end short reads.
+- Output is name-collated (read pairs are together), which is needed for the next step.
+
+### Step 2: Fixing Mate-Pair Issues
+```bash
+samtools fixmate -O bam,level=1 CE.sam fixmate.bam
+```
+- `samtools fixmate` checks and corrects mate information (FLAG, RNEXT, PNEXT, TLEN).
+- `-O bam,level=1` outputs BAM with minimal compression for speed.
+- Add `-m` if you want to populate mate CIGAR (`MC`) and mate score (`ms`) tags:
+
+  ```bash
+  samtools fixmate -O bam,level=1 -m CE.sam fixmate.bam
+  ```
+
+### Step 3 & 4: Sorting to Positional Order
+```bash
+samtools sort -l 1 -@8 -o pos.srt.bam -T /tmp/example_prefix fixmate.bam
+```
+- Sort reads by genomic coordinate.
+- `-@8`: uses 8 threads.
+- `-l 1`: minimal compression (optional).
+- `-T /tmp/example_prefix`: prefix for temporary sorting files.
+
+### Step 5: Marking Duplicates
+```bash
+samtools markdup -O bam,level=1 pos.srt.bam markdup.bam
+```
+- Uses the MC/ms tags from the `-m` fixmate step.
+
+### Step 6: Converting to Final Format
+```bash
+samtools view -@8 markdup.bam -o final.bam
+```
+or, to produce CRAM:
+```bash
+samtools view -T C.Elegans.fa -@8 markdup.bam -o final.cram
+```
+
+---
+
+## Pipelining for Efficiency
+Instead of writing each intermediate file to disk, we can **pipe** the commands:
+```bash
+minimap2 -t 8 -a -x sr C.Elegans.fa SRR065390_[12].fastq | \
+samtools fixmate -u -m - - | \
+samtools sort -u -@2 -T /tmp/example_prefix - | \
+samtools markdup -@8 --reference C.Elegans.fa - final.cram
+```
+- `-u` or `-O bam,level=0` keeps data uncompressed in the pipeline for speed.
+- `set -o pipefail` helps detect errors in earlier commands.
+
+---
+
+## Converting Back to FASTQ
+If the unmapped reads were retained, you can revert your final BAM/CRAM to FASTQ:
+```bash
+samtools sort -n -@8 final.cram | \
+samtools fastq - -1 dat_1.fq -2 dat_2.fq > /dev/null
+```
+- Sorting by read name (`-n`) is required before producing paired FASTQ.
+- The original exact FASTQ order is not preserved but is generally unimportant for reanalysis.
+
+---
+
+## De-novo Assembly
+- Assemblers produce a consensus FASTA or FASTQ rather than individual alignments.
+- If you need per-read alignments to the newly assembled consensus, just build an index on the assembly and follow the same **Mapping** steps as above.
+- For CRAM, ensure you have access to the same consensus reference or embed it:
+  ```bash
+  samtools view -O CRAM,embed_ref in.sam -o out.cram
+  ```
+
+---
+
+## Key Takeaways
+- **Name-collated** BAM is essential for certain steps (e.g., `fixmate`, partial duplication marking).
+- **Coordinate-sorted** BAM is needed for final duplicate marking and most downstream analyses.
+- **Pipelines** avoid intermediate files, are faster, and use uncompressed or minimal-compression data in memory.
+- **CRAM** can reduce storage size but requires consistent references.
+- Always verify each step with basic stats (`samtools flagstat`, etc.) to ensure no unexpected data loss.
+
+
+---
+
+# WGS/WES Mapping to Variant Calls
+
+## Overview
+Typical DNA sequence analysis involves three main phases: **Mapping**, **Improvement**, and **Variant Calling**. Below is a common workflow illustrating these steps for Whole Genome Sequencing (WGS) or Whole Exome Sequencing (WES).
+
+---
+
+## 1. Mapping
+
+1. **Reference Preparation**:
+   ```bash
+   bwa index <ref.fa>
+   ```
+   - Prepares a Burrows–Wheeler Transform (BWT) index, required for BWA.
+
+2. **Aligning Reads with BWA-MEM**:
+   ```bash
+   bwa mem -R '@RG\tID:foo\tSM:bar\tLB:library1' <ref.fa> <read1.fq> <read2.fq> > lane.sam
+   ```
+   - The `-R` flag attaches read-group metadata (e.g., sample name, library). This data is crucial for downstream tools.
+   - Output is in SAM format.
+
+3. **Fixmate**:
+   ```bash
+   samtools fixmate -O bam <lane.sam> <lane_fixmate.bam>
+   ```
+   - Cleans up pairing flags, ensuring consistent FLAG and mate info.
+
+4. **Sort**:
+   ```bash
+   samtools sort -O bam -o <lane_sorted.bam> -T </tmp/lane_temp> <lane_fixmate.bam>
+   ```
+   - Converts name-collated BAM to coordinate-sorted BAM for downstream steps.
+
+---
+
+## 2. Improvement
+
+### 2.1 Indel Realignment (GATK)
+
+Misalignment around INDELs can cause false variant calls. The GATK realignment step includes two commands:
+
+```bash
+# Step 1: Identify intervals needing realignment
+java -Xmx2g -jar GenomeAnalysisTK.jar -T RealignerTargetCreator \
+  -R <ref.fa> -I <lane.bam> -o <lane.intervals> --known <Mills1000G.b38.vcf>
+
+# Step 2: Realign around those intervals
+java -Xmx4g -jar GenomeAnalysisTK.jar -T IndelRealigner -R <ref.fa> \
+  -I <lane.bam> -targetIntervals <lane.intervals> \
+  --known <Mills1000G.b38.vcf> -o <lane_realigned.bam>
+```
+
+### 2.2 Base Quality Score Recalibration (GATK BQSR)
+
+Reduces machine- or run-specific biases by adjusting base quality scores.
+
+```bash
+# Analyze covariates
+java -Xmx4g -jar GenomeAnalysisTK.jar -T BaseRecalibrator \
+  -R <ref.fa> -knownSites <dbsnp_142.b38.vcf> \
+  -I <lane.bam> -o <lane_recal.table>
+
+# Apply recalibration
+java -Xmx2g -jar GenomeAnalysisTK.jar -T PrintReads -R <ref.fa> \
+  -I <lane.bam> --BQSR <lane_recal.table> -o <lane_recal.bam>
+```
+
+### 2.3 Marking Duplicates & Merging Libraries
+
+1. **Mark Duplicates**:
+   ```bash
+   java -Xmx2g -jar MarkDuplicates.jar VALIDATION_STRINGENCY=LENIENT \
+     INPUT=<lane_1.bam> INPUT=<lane_2.bam> \
+     OUTPUT=<library.bam>
+   ```
+   - Marks PCR/optical duplicates.
+
+2. **Merge** libraries into a single sample-level BAM:
+   ```bash
+   samtools merge <sample.bam> <library1.bam> <library2.bam> <library3.bam>
+   samtools index <sample.bam>
+   ```
+
+3. **(Optional) Realign Once More**:
+   ```bash
+   java -Xmx2g -jar GenomeAnalysisTK.jar -T RealignerTargetCreator ...
+   java -Xmx4g -jar GenomeAnalysisTK.jar -T IndelRealigner ...
+   samtools index <sample_realigned.bam>
+   ```
+
+---
+
+## 3. Variant Calling
+
+### 3.1 Generating BCF/VCF with bcftools
+
+`mpileup` is used to gather per-base data, and `bcftools call` calls variants:
+
+```bash
+# One-step approach using a pipe
+bcftools mpileup -Ou -f <ref.fa> <sample1.bam> <sample2.bam> <sample3.bam> | \
+  bcftools call -vmO z -o <study.vcf.gz>
+```
+
+Alternatively, two-step:
+```bash
+# Step 1: produce BCF
+bcftools mpileup -Ob -o <study.bcf> -f <ref.fa> <sample1.bam> <sample2.bam> <sample3.bam>
+
+# Step 2: call variants
+bcftools call -vmO z -o <study.vcf.gz> <study.bcf>
+```
+
+### 3.2 VCF Indexing & Statistics
+
+```bash
+tabix -p vcf <study.vcf.gz>
+
+bcftools stats -F <ref.fa> -s - <study.vcf.gz> > <study.vcf.gz.stats>
+mkdir plots
+plot-vcfstats -p plots/ <study.vcf.gz.stats>
+```
+
+### 3.3 Filtering
+
+```bash
+bcftools filter -O z -o <study_filtered.vcf.gz> -s LOWQUAL \
+  -i'%QUAL>10' <study.vcf.gz>
+```
+
+Filtering strategies depend heavily on the study’s goals, data quality, and coverage.
+
+---
+
+## Key Points
+1. **Mapping**: Use BWA-MEM (index reference, align reads, fixmate, sort).
+2. **Improvement**: Realign around indels, recalibrate base qualities, mark duplicates, and merge.
+3. **Variant Calling**: Generate pileup and call variants (bcftools), index VCF, gather stats, and filter.
+4. **Read Group Info** (`@RG`): Ensure correct `ID`, `SM`, and `LB` for GATK/bcftools compatibility.
+5. **QC & Filtering**: Visualize with IGV, review alignment stats, apply appropriate variant filters.

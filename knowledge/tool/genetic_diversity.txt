@@ -1,0 +1,94 @@
+        {
+            "step_number": 4,
+            "description": "Perform essential descriptive analyses to assess genetic diversity and structure. This includes computing Runs of Homozygosity (ROH) to detect long homozygous segments indicative of inbreeding, generating Linkage Disequilibrium (LD) decay curves to evaluate the decline of LD with genomic distance, and optionally computing heterozygosity rates and inbreeding coefficients for each individual. These metrics provide fundamental insights into the genetic diversity within and between the 26 populations.",
+            "input_filename": [
+                "./output/030/unrelated_1000GP.bed: PLINK bed file with relatives removed",
+                "./output/030/unrelated_1000GP.bim: PLINK bim file with relatives removed",
+                "./output/030/unrelated_1000GP.fam: PLINK fam file with relatives removed"
+            ],
+            "output_filename": [
+                "./output/030/ld_decay.txt: LD decay data showing correlation vs genomic distance",
+                "./output/030/het_stats.het: heterozygosity statistics per individual",
+                "./output/030/roh_segments.txt: ROH segments identified per individual",
+                "./output/030/basic_stats_report.txt: comprehensive summary of genetic diversity metrics"
+            ],
+            "tools": "PLINK, Python"
+        },
+
+
+plink --bfile ./output/030/ld_pruned_1000GP --het --out ./output/030/het_stats
+cat << 'EOF' > ./output/030/compute_summary.py
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+# Process ROH data
+try:
+    roh_df = pd.read_csv('./output/030/roh_segments.txt', delim_whitespace=True, comment='#')
+    num_segments = len(roh_df)
+    mean_roh_kb = roh_df['KB'].mean()
+except:
+    num_segments, mean_roh_kb = 0, float('nan')
+
+# Process LD decay data
+try:
+    ld_df = pd.read_csv('./output/030/ld_decay.txt', delim_whitespace=True, comment='#')
+    ld_df['Distance'] = abs(ld_df['BP_A'] - ld_df['BP_B'])
+    if 'R2' in ld_df.columns:
+        r2_col = 'R2'
+    else:
+        r2_col = 'R^2'
+    mean_r2 = ld_df[r2_col].mean()
+    
+    # Create LD decay plot
+    ld_df = ld_df[ld_df['Distance'] <= 1000000]
+    bins = range(0, 1000001, 10000)
+    ld_df['Bin'] = pd.cut(ld_df['Distance'], bins)
+    bin_means = ld_df.groupby('Bin')[r2_col].mean().reset_index()
+    bin_means['Mid'] = [b.mid for b in bin_means['Bin']]
+    
+    plt.figure()
+    plt.plot(bin_means['Mid'], bin_means[r2_col], marker='o')
+    plt.xlabel('Genomic Distance (bp)')
+    plt.ylabel('Mean r²')
+    plt.title('LD Decay Curve')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('./output/030/ld_decay_plot.png', dpi=300)
+    plt.close()
+except:
+    mean_r2 = float('nan')
+
+# Process heterozygosity data
+try:
+    het_df = pd.read_csv('./output/030/het_stats.het', delim_whitespace=True, comment='#')
+    mean_f = het_df['F'].mean()
+except:
+    mean_f = float('nan')
+
+# Create ROH distribution plot
+try:
+    roh_counts = roh_df.groupby('FID').size()
+    plt.figure()
+    roh_counts.hist(bins=20)
+    plt.xlabel("Number of ROH Segments")
+    plt.ylabel("Number of Individuals")
+    plt.title("ROH Segment Count Distribution")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('./output/030/roh_distribution.png', dpi=300)
+    plt.close()
+except:
+    pass
+
+# Write summary report
+with open('./output/030/basic_stats_report.txt', 'w') as out:
+    out.write("## Descriptive Genetic Statistics Summary\n")
+    out.write(f"Total ROH segments: {num_segments}\n")
+    out.write(f"Mean ROH segment length (KB): {mean_roh_kb:.2f}\n")
+    out.write(f"Mean LD R²: {mean_r2:.4f}\n")
+    out.write(f"Mean inbreeding coefficient (F): {mean_f:.4f}\n")
+    out.write("LD decay plot saved to: ld_decay_plot.png\n")
+    out.write("ROH distribution plot saved to: roh_distribution.png\n")
+EOF
+python ./output/030/compute_summary.py

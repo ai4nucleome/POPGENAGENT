@@ -1,0 +1,34 @@
+MAFin Usage Instructions must include:Step1: Navigate to Output Directory. Description: Before executing the MAFin command, change the working directory to the expected output path using `cd`. MAFin will write output files to the current working directory. If your MAF input file is specified using a relative path (e.g., `./data/xxx`), adjust it relative to your new working directory, such as `../../data/xxx`. Step2: Run MAFin command. Description: Execute the MAFin tool with the desired parameters. The command-line must specify exactly one search type (`--regexes`, `--kmers`, or `--jaspar_file`). Additional options include strand orientation, number of processes, and report format. Example Command: 
+
+```bash
+MAFin ../../data/sample.maf \
+      --regexes "CTGCCCGCA" "AGT" \
+      --search_in reference \
+      --reverse_complement no \
+      --processes 4 \
+      --detailed_report
+```
+
+Expected Output: All result files will be written to the current directory, including:
+- `regex_search_motif_hits.bed`
+- `ref_genome_regex_search_AGT_motif_hits.json`
+- `ref_genome_regex_search_AGT_motif_hits.csv` (if `--detailed_report` is used).
+
+Command-Line Arguments:
+- `maf_file` (Required): Path to the uncompressed MAF file.
+- `--genome_ids`: Path to a genome IDs file (optional).
+- `--search_in`: Genome to search motifs in ('reference' [default] or 'all').
+- `--reverse_complement`: Search both strands if 'yes'. Choices: 'yes' or 'no' (default: 'no').
+- `--pvalue_threshold`: P-value threshold for PWM matches (default: 1e-4).
+- `--processes`: Number of parallel processes (default: 1).
+- `--background_frequencies`: Four space-separated floats summing to 1 (e.g., 0.25 0.25 0.25 0.25).
+- `--purge_results_dir`: Purge the 'tmp' directory before execution.
+- `--verbose, -v`: Enable verbose logging to `debug.log`.
+- `--detailed_report, -d`: Generate merged JSON and CSV analytical output.
+
+Search Type Flags (Mutually Exclusive):
+- `--regexes`: Provide one or more regex motifs as arguments.
+- `--kmers`: Path to a text file containing K-mers (one per line).
+- `--jaspar_file`: Path to a JASPAR-formatted PWM file.
+
+Tools Used: MAFin command-line interface, with support for regular expression, k-mer, and PWM motif scanning, parallel computing, and flexible output formats.

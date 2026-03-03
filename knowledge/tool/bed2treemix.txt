@@ -1,0 +1,35 @@
+bed2treemix.sh & plink2treemix.py: Convert PLINK to TreeMix Format
+=====================================================================
+
+## bed2treemix.sh
+
+Convert PLINK binary files to TreeMix allele-count input format.
+Creates cluster file from .fam, runs PLINK stratified frequencies, converts to TreeMix format.
+
+Usage:
+  bash ./scripts/bed2treemix.sh <PLINK_PREFIX>
+
+Example:
+  bash ./scripts/bed2treemix.sh ./output/095/ld_pruned2
+
+Generated files:
+  - {PREFIX}.clust: population cluster file
+  - {PREFIX}.frq.strat: stratified allele frequencies
+  - {PREFIX}.treemix.frq.gz: TreeMix input (gzipped allele counts)
+
+Prerequisites: PLINK, Python3, gzip
+Note: .fam first column (FID) must be population codes.
+
+## plink2treemix.py
+
+Python script for converting gzipped PLINK stratified frequency files to TreeMix format.
+
+Usage:
+  python3 ./scripts/plink2treemix.py <input.frq.strat.gz> <output.treemix.frq.gz>
+
+Output format:
+  Line 1: space-separated population names
+  Subsequent lines: comma-separated allele1,allele2 counts per population
+
+Example:
+  python3 ./scripts/plink2treemix.py ./output/095/ld_pruned2.frq.strat.gz ./output/095/treemix_input.frq.gz

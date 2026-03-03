@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.env/
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sensitive config (config.yaml contains API keys; use config.yaml.example as template)
+config.yaml
+.env
+.env.*
+!.env.example
+
+# Data & logs
+*.log
+*.obs
+*.sqlite3
+chroma_db/
+history/
+debug.log
+
+# Large data (keep only examples in output/)
+data/*.bed
+data/*.bim
+data/*.fam
+data/*.vcf
+data/*.fastq*
+data/*.gz
+data/*.fa
+data/*.fst
+
+# Temporary
+*.bak
+*.tmp
+*.temp
+.DS_Store
+
+# Session/runtime state (regenerated)
+knowledge/file_info.json
+knowledge/session_status.json

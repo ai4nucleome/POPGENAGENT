@@ -1,0 +1,30 @@
+# Goal: This is the obs file for the two populations,which are PJL and GWD from 1000GP. I hope to build a migration and separation model based on this obs file.
+# Generated from output 003
+# Successfully validated
+
+demes:
+- description: Ancestral population of PJL and GWD
+  epochs:
+  - end_time: 383125.0
+    start_size: 9219
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Punjabi from Lahore, Pakistan
+  epochs:
+  - start_size: 18445
+  name: PJL
+- ancestors:
+  - ancestral
+  description: Gambian in Western Division, Gambia
+  epochs:
+  - start_size: 34791
+  name: GWD
+description: Migration and separation model for PJL and GWD populations from 1000
+  Genomes Project
+generation_time: 25
+migrations:
+- dest: GWD
+  rate: 8.43937e-05
+  source: PJL
+time_units: years

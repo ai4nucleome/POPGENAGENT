@@ -1,0 +1,47 @@
+Small RNA sequencing and miRNA prediction workflow consists of the following key steps:
+
+Step 1: Quality Control and Trimming
+Description: Perform quality control on raw sequencing reads, remove low-quality reads, and trim sequencing adapters.
+Commands:
+  fastqc ./data/*.fastq.gz -o ./output/010/qc_reports/
+  fastp -i ./data/C1.fastq.gz -o ./output/010/trimmed_C1.fastq.gz
+
+Step 2: Genome Alignment
+Description: Build index from genome and align reads with Bowtie1. Convert to sorted BAM.
+Commands:
+  bowtie-build ./data/genome.fa ./output/010/genome_index
+  bowtie -S -p 16 ./output/010/genome_index ./output/010/trimmed_C1.fastq.gz > ./output/010/C1.sam
+  samtools view -bS ./output/010/C1.sam | samtools sort -o ./output/010/aligned_C1.bam
+  samtools index ./output/010/aligned_C1.bam
+Checkpoint: Use `samtools flagstat` to verify alignments are not empty.
+
+Step 3: miRNA Quantification
+Description: Use featureCounts with a SAF annotation file.
+Commands:
+  python convert_fasta_to_saf.py -i ./data/miRBase_mature.fasta -o ./data/miRBase_mature.saf
+  featureCounts -T 4 -F SAF -a ./data/miRBase_mature.saf -o ./output/010/miRNA_expression_matrix.txt ./output/010/aligned_C1.bam
+Checkpoint: Ensure expression matrix has non-zero counts.
+
+Step 4: Novel miRNA Discovery
+Description: Collapse reads and predict novel miRNAs with miRDeep2.
+Commands:
+  mapper.pl ./output/010/trimmed_C1.fastq.gz -e -h -m -l 18 -s ./output/010/reads_collapsed.fa -t ./output/010/reads.arf -r ./data/genome.fa
+  miRDeep2.pl ./output/010/reads_collapsed.fa ./data/genome.fa ./output/010/reads.arf ./data/miRBase_mature.fasta ./data/miRBase_hairpin.fasta -t Human > ./output/010/miRDeep2_results.txt
+Checkpoint: Ensure result file contains predicted miRNAs.
+
+---
+
+Step 3: miRNA Quantification
+Description: Quantify miRNA expression using featureCounts and SAF-format annotation derived from known miRNA sequences.
+Input Required: Aligned BAM files, miRNA annotation in SAF format.
+Expected Output: Expression matrix (miRNA counts).
+Tools Used: featureCounts.
+Commands:
+  ```bash
+  # Convert FASTA to SAF
+  python ./scripts/convert_fasta_to_saf.py -i ./data/miRBase_mature.fasta -o ./data/miRBase_mature.saf
+  
+  # Run featureCounts
+  featureCounts -F SAF -T 4 -a ./data/miRBase_mature.saf -o ./output/010/miRNA_expression_matrix.txt ./output/010/aligned_C1.bam
+  ```
+**Checkpoint:** Check that `miRNA_expression_matrix.txt` has non-zero counts.

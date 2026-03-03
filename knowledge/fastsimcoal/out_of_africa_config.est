@@ -1,0 +1,28 @@
+// Search ranges and rules file for fsc28
+// ****************************
+
+[PARAMETERS]
+//#isInt? #name   #dist.#min  #max 
+//all Ns are in number of haploid individuals
+1  NPOP1       logunif  100000  300000   output
+1  NPOP2       logunif  100000  300000   output
+1  NPOP3       logunif  100000  300000   output
+1  RSIZE1      logunif  10000   100000   output
+1  RSIZE2      logunif  5000    50000    output
+1  RSIZE3      logunif  5000    50000    output
+1  ANC12       logunif  1000    20000    output
+1  ANC0        logunif  10000   50000    output
+1  TDIV1       unif     2000    5000     output
+1  TDIV2       unif     100     1000     output
+1  TEXP1       unif     1100    1400     output
+1  TEXP2       unif     1000    1200     output
+1  TEXP3       unif     1000    1250     output
+0  MIG12       logunif  1e-6    1e-3     output
+0  MIG13       logunif  1e-6    1e-3     output
+0  MIG21       logunif  1e-6    1e-3     output
+0  MIG23       logunif  1e-6    1e-3     output
+0  MIG31       logunif  1e-6    1e-3     output
+0  MIG32       logunif  1e-6    1e-3     output
+0  GR1         unif     -0.001  0.001    output
+0  GR2         unif     -0.001  0.001    output
+0  GR3         unif     -0.001  0.001    output

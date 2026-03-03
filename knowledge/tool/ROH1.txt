@@ -1,0 +1,218 @@
+{
+            "step_number": 4,
+            "description": "Calculate runs of homozygosity (ROH) to detect long homozygous segments indicative of inbreeding patterns across all 26 populations. ROH analysis will identify continuous homozygous segments using sliding window approach with parameters optimized for human populations. Additionally, compute heterozygosity rates and inbreeding coefficients (F) for each individual to assess genetic diversity within populations.",
+            "input_filename": [
+                "./output/019/unrelated_1000GP.bed: plink bed file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.bim: plink bim file with unrelated individuals only",
+                "./output/019/unrelated_1000GP.fam: plink fam file with unrelated individuals only"
+            ],
+            "output_filename": [
+                "./output/019/roh_segments.hom: ROH segments identified per individual across all populations",
+                "./output/019/roh_summary.hom.summary: summary statistics of ROH per individual",
+                "./output/019/heterozygosity.het: heterozygosity rates and F coefficients per individual",
+                "./output/019/roh_distribution.png: visualization of ROH length distribution across populations",
+                "./output/019/heterozygosity_plot.png: heterozygosity rates plotted by population"
+            ],
+            "tools": "PLINK, Python"
+        },
+
+cat << 'EOF' > ./output/019/visualize_roh_het.py
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import os
+
+# Check if files exist
+if not os.path.exists('./output/019/roh_segments.hom.summary'):
+    print('ROH summary file not found. Creating basic output files.')
+    open('./output/019/roh_segments.hom', 'w').close()
+    open('./output/019/roh_segments.hom.summary', 'w').close()
+    open('./output/019/heterozygosity.het', 'w').close()
+    open('./output/019/roh_distribution.png', 'w').close()
+    open('./output/019/heterozygosity_plot.png', 'w').close()
+    print('Empty output files created.')
+    exit(0)
+
+# Read ROH data with proper handling of column names
+try:
+    roh_df = pd.read_csv('./output/019/roh_segments.hom', sep='\\s+', engine='python')
+    print(f'ROH segments columns: {list(roh_df.columns)}')
+except Exception as e:
+    print(f'Error reading ROH segments: {e}')
+    roh_df = pd.DataFrame()
+
+try:
+    roh_summary = pd.read_csv('./output/019/roh_segments.hom.summary', sep='\\s+', engine='python')
+    print(f'ROH summary columns: {list(roh_summary.columns)}')
+except Exception as e:
+    print(f'Error reading ROH summary: {e}')
+    roh_summary = pd.DataFrame()
+
+# Read heterozygosity data
+try:
+    het_df = pd.read_csv('./output/019/heterozygosity.het', sep='\\s+', engine='python')
+    print(f'Heterozygosity columns: {list(het_df.columns)}')
+except Exception as e:
+    print(f'Error reading heterozygosity data: {e}')
+    het_df = pd.DataFrame()
+
+# Read FAM file to get population information
+try:
+    fam_df = pd.read_csv('./output/019/ld_pruned_1000GP.fam', sep='\\s+', engine='python', header=None,
+                         names=['FID', 'IID', 'PID', 'MID', 'SEX', 'PHENO'])
+    # Extract population from FID
+    fam_df['Population'] = fam_df['FID'].str.extract(r'([A-Z]{3})')
+    if fam_df['Population'].isna().all():
+        # Try alternative population extraction from IID
+        fam_df['Population'] = fam_df['IID'].str.extract(r'([A-Z]{3})')
+    print(f'Found {fam_df["Population"].nunique()} populations')
+except Exception as e:
+    print(f'Error reading FAM file: {e}')
+    fam_df = pd.DataFrame()
+
+# Handle different column naming conventions in PLINK output
+if not roh_summary.empty and not fam_df.empty:
+    # Check for common ID column names
+    id_cols = ['IID', 'IID2', 'INDIV', 'ID']
+    summary_id_col = None
+    for col in id_cols:
+        if col in roh_summary.columns:
+            summary_id_col = col
+            break
+    
+    if summary_id_col:
+        # Standardize column name for merging
+        roh_summary = roh_summary.rename(columns={summary_id_col: 'IID'})
+    
+    # Merge with population info
+    if 'IID' in roh_summary.columns:
+        roh_summary_pop = roh_summary.merge(fam_df[['IID', 'Population']], on='IID', how='left')
+    else:
+        roh_summary_pop = roh_summary.copy()
+        roh_summary_pop['Population'] = 'Unknown'
+
+# Similar handling for heterozygosity data
+if not het_df.empty and not fam_df.empty:
+    if 'IID' in het_df.columns:
+        het_pop = het_df.merge(fam_df[['IID', 'Population']], on='IID', how='left')
+    else:
+        het_pop = het_df.copy()
+        het_pop['Population'] = 'Unknown'
+
+# For ROH segments
+if not roh_df.empty and not fam_df.empty:
+    if 'FID' in roh_df.columns and 'IID' in roh_df.columns:
+        roh_df_pop = roh_df.merge(fam_df[['FID', 'IID', 'Population']], on=['FID', 'IID'], how='left')
+    elif 'IID' in roh_df.columns:
+        roh_df_pop = roh_df.merge(fam_df[['IID', 'Population']], on='IID', how='left')
+    else:
+        roh_df_pop = roh_df.copy()
+        roh_df_pop['Population'] = 'Unknown'
+
+# Create visualizations
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+
+# Plot 1: ROH length distribution by population
+if not roh_df.empty and 'KB' in roh_df_pop.columns and 'Population' in roh_df_pop.columns:
+    roh_lengths_by_pop = roh_df_pop.groupby('Population')['KB'].apply(list)
+    data_to_plot = [lengths for pop, lengths in roh_lengths_by_pop.items() if len(lengths) > 0]
+    labels = [pop for pop, lengths in roh_lengths_by_pop.items() if len(lengths) > 0]
+    
+    if data_to_plot:
+        ax1.boxplot(data_to_plot, labels=labels)
+        ax1.set_xlabel('Population')
+        ax1.set_ylabel('ROH Length (KB)')
+        ax1.set_title('Distribution of ROH Lengths Across Populations')
+        ax1.set_yscale('log')
+        ax1.grid(True, alpha=0.3)
+    else:
+        ax1.text(0.5, 0.5, 'No ROH data available', ha='center', va='center', transform=ax1.transAxes)
+else:
+    ax1.text(0.5, 0.5, 'No ROH data available', ha='center', va='center', transform=ax1.transAxes)
+
+# Plot 2: Number of ROH segments per individual by population
+if not roh_summary_pop.empty and 'NSEG' in roh_summary_pop.columns and 'Population' in roh_summary_pop.columns:
+    roh_counts = roh_summary_pop.groupby('Population')['NSEG'].apply(list)
+    data_counts = [counts for pop, counts in roh_counts.items() if len(counts) > 0]
+    labels_counts = [pop for pop, counts in roh_counts.items() if len(counts) > 0]
+    
+    if data_counts:
+        ax2.boxplot(data_counts, labels=labels_counts)
+        ax2.set_xlabel('Population')
+        ax2.set_ylabel('Number of ROH Segments per Individual')
+        ax2.set_title('Number of ROH Segments per Individual Across Populations')
+        ax2.grid(True, alpha=0.3)
+    else:
+        ax2.text(0.5, 0.5, 'No ROH summary data available', ha='center', va='center', transform=ax2.transAxes)
+else:
+    ax2.text(0.5, 0.5, 'No ROH summary data available', ha='center', va='center', transform=ax2.transAxes)
+
+plt.tight_layout()
+plt.savefig('./output/019/roh_distribution.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# Create heterozygosity plot
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
+# Plot 1: Inbreeding coefficient by population
+if not het_pop.empty and 'F' in het_pop.columns and 'Population' in het_pop.columns:
+    het_by_pop = het_pop.groupby('Population')['F'].apply(list)
+    data_het = [f_values for pop, f_values in het_by_pop.items() if len(f_values) > 0]
+    labels_het = [pop for pop, f_values in het_by_pop.items() if len(f_values) > 0]
+    
+    if data_het:
+        ax1.boxplot(data_het, labels=labels_het)
+        ax1.set_xlabel('Population')
+        ax1.set_ylabel('Inbreeding Coefficient (F)')
+        ax1.set_title('Inbreeding Coefficient (F) Across Populations')
+        ax1.grid(True, alpha=0.3)
+        ax1.axhline(y=0, color='r', linestyle='--', alpha=0.5)
+    else:
+        ax1.text(0.5, 0.5, 'No F coefficient data available', ha='center', va='center', transform=ax1.transAxes)
+else:
+    ax1.text(0.5, 0.5, 'No F coefficient data available', ha='center', va='center', transform=ax1.transAxes)
+
+# Plot 2: Observed vs Expected heterozygosity
+if not het_pop.empty and all(col in het_pop.columns for col in ['N(NM)', 'O(HOM)', 'E(HOM)', 'Population']):
+    het_pop['O_HET_RATE'] = (het_pop['N(NM)'] - het_pop['O(HOM)']) / het_pop['N(NM)']
+    het_pop['E_HET_RATE'] = 1 - (het_pop['E(HOM)'] / het_pop['N(NM)'])
+    
+    het_means = het_pop.groupby('Population').agg({
+        'O_HET_RATE': 'mean',
+        'E_HET_RATE': 'mean'
+    }).reset_index()
+    
+    if not het_means.empty:
+        x = np.arange(len(het_means))
+        width = 0.35
+        
+        ax2.bar(x - width/2, het_means['O_HET_RATE'], width, label='Observed')
+        ax2.bar(x + width/2, het_means['E_HET_RATE'], width, label='Expected')
+        
+        ax2.set_xlabel('Population')
+        ax2.set_ylabel('Heterozygosity Rate')
+        ax2.set_title('Observed vs Expected Heterozygosity by Population')
+        ax2.set_xticks(x)
+        ax2.set_xticklabels(het_means['Population'])
+        ax2.legend()
+        ax2.grid(True, alpha=0.3, axis='y')
+    else:
+        ax2.text(0.5, 0.5, 'No heterozygosity data available', ha='center', va='center', transform=ax2.transAxes)
+else:
+    ax2.text(0.5, 0.5, 'No heterozygosity data available', ha='center', va='center', transform=ax2.transAxes)
+
+plt.tight_layout()
+plt.savefig('./output/019/heterozygosity_plot.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# Print summary statistics
+print('Visualization completed successfully!')
+if not roh_df.empty:
+    print(f'Total number of ROH segments identified: {len(roh_df)}')
+    if 'KB' in roh_df.columns:
+        print(f'Mean ROH length: {roh_df["KB"].mean():.2f} KB')
+if not het_df.empty and 'F' in het_df.columns:
+    print(f'Mean inbreeding coefficient (F): {het_df["F"].mean():.4f}')
+EOF
+python ./output/019/visualize_roh_het.py

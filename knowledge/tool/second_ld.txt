@@ -1,0 +1,17 @@
+        {
+            "step_number": 7,
+            "description": "Perform a second round of LD pruning with more stringent parameters to prepare data for population structure analyses. This step uses stricter LD thresholds (r\u00b2 > 0.1) to ensure near-independence of markers for PCA and ADMIXTURE analyses, which assume unlinked loci.",
+            "input_filename": [
+                "./output/009/unrelated_1000GP.bed: genotype data with unrelated individuals",
+                "./output/009/unrelated_1000GP.bim: variant information",
+                "./output/009/unrelated_1000GP.fam: sample information"
+            ],
+            "output_filename": [
+                "./output/009/final_ld_pruned_1000GP.bed: stringently LD-pruned genotype data",
+                "./output/009/final_ld_pruned_1000GP.bim: stringently LD-pruned variant information",
+                "./output/009/final_ld_pruned_1000GP.fam: stringently LD-pruned sample information"
+            ],
+            "tools": "PLINK"
+        },
+
+plink --bfile ./output/009/unrelated_1000GP --extract ./output/009/stringent_ld_prune.prune.in --make-bed --out ./output/009/final_ld_pruned_1000GP

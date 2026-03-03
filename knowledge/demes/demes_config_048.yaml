@@ -1,0 +1,44 @@
+# Goal: Based on the available data, conduct an inference of a migration and separation model for two populations
+
+Previous Analysis Results Summary:
+# Population Genetics Analysis: MSL and CHB Population Comparison
+
+## 1. Population Structure Analysis
+
+### PCA Results (Bottom Left Panel)
+The Principal Component Analysis reveals **complete population differentiation** between MSL (Mende in Sierra Leone) and CHB (Han Chinese in Beijing) populations:
+- **Clear bimodal clustering**: The two populations form distinct, non-overlapping clusters along PC1 (~3% variance)
+- **Continental-level divergence**: This pattern is characteristic of populations separated by major continental boundaries (African vs. East Asian)
+- **No admixture signal**: The absence of intermediate individuals suggests minimal recent gene flow between these populations
+
+### Demographic Model (Bottom Center Panel)
+The demographic reconstruction shows:
+- **Deep ancestral se...
+# Generated from output 048
+# Successfully validated
+
+demes:
+- description: Ancestral population before MSL-CHB split
+  epochs:
+  - end_time: 20395
+    start_size: 1087
+  name: ancestral
+- ancestors:
+  - ancestral
+  description: Mende in Sierra Leone
+  epochs:
+  - start_size: 5541
+  name: MSL
+- ancestors:
+  - ancestral
+  description: Han Chinese in Beijing
+  epochs:
+  - start_size: 41003
+  name: CHB
+description: Migration and separation model for MSL and CHB populations
+generation_time: 1
+migrations:
+- dest: CHB
+  rate: 0.000930968
+  source: MSL
+time_units: generations

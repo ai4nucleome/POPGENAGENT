@@ -1,0 +1,48 @@
+selscan - Haplotype-Based Selection Scans (iHS, XP-EHH, nSL)
+=============================================================
+
+selscan calculates extended haplotype homozygosity (EHH) statistics for detecting
+positive natural selection in genomic data.
+
+## Installation
+conda install -c bioconda selscan
+
+## Supported Statistics
+- iHS: integrated Haplotype Score (within-population)
+- XP-EHH: Cross-Population Extended Haplotype Homozygosity
+- nSL: number of Segregating sites by Length
+- XP-nSL: Cross-population nSL
+
+## Input Format
+- VCF or TPED format with phased haplotypes
+- Genetic map file (optional but recommended)
+
+## Usage
+
+### iHS (within-population selection scan)
+selscan --ihs --vcf phased.vcf.gz --map genetic_map.map --out results_ihs
+# Normalize
+norm --ihs --files results_ihs.ihs.out --bp-win --winsize 100000
+
+### XP-EHH (cross-population selection)
+selscan --xpehh --vcf pop1.vcf.gz --vcf-ref pop2.vcf.gz --map genetic_map.map --out results_xpehh
+norm --xpehh --files results_xpehh.xpehh.out
+
+### nSL (does not require genetic map)
+selscan --nsl --vcf phased.vcf.gz --out results_nsl
+norm --nsl --files results_nsl.nsl.out
+
+## Output Interpretation
+- |iHS| > 2: suggestive of selection
+- |iHS| > 3: strong signal of selection
+- Positive iHS: selection on ancestral allele
+- Negative iHS: selection on derived allele
+- XP-EHH > 0: selection in target population
+- XP-EHH < 0: selection in reference population
+
+## Key Parameters
+--threads N          Number of threads
+--maf 0.05           Minimum allele frequency filter
+--max-gap 200000     Maximum gap between SNPs
+--gap-scale 20000    Gap scale parameter
+--cutoff 0.05        EHH decay cutoff

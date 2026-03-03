@@ -1,0 +1,40 @@
+GCTA - Genome-wide Complex Trait Analysis
+==========================================
+
+GCTA estimates genetic relationships, performs PCA, and calculates
+heritability from genome-wide SNP data.
+
+## Installation
+conda install -c bioconda gcta
+
+## Key Analyses
+
+### Genetic Relationship Matrix (GRM)
+gcta64 --bfile input --make-grm --out grm_output --thread-num 8
+gcta64 --bfile input --make-grm --autosome --maf 0.01 --out grm_output
+
+### PCA from GRM
+gcta64 --grm grm_output --pca 20 --out pca_results --thread-num 8
+# Output: pca_results.eigenval, pca_results.eigenvec
+
+### GREML Heritability Estimation
+gcta64 --grm grm_output --pheno phenotype.txt --reml --out h2_results --thread-num 8
+# Output includes: Vg (genetic variance), Ve (environmental variance), h2 (heritability)
+
+### Bivariate REML
+gcta64 --grm grm_output --pheno pheno.txt --reml-bivar 1 2 --out bivar_results
+
+### COJO (Conditional and Joint Analysis)
+gcta64 --bfile input --cojo-file gwas_summary.txt --cojo-slct --out cojo_results
+
+### LD Score
+gcta64 --bfile input --ld-score --ld-wind 1000 --ld-rsq-cutoff 0.01 --out ld_scores
+
+### FST
+gcta64 --bfile input --fst --sub-pop pop_groups.txt --out fst_results
+
+## Population File Format
+# pop_groups.txt (FID IID Group):
+# FAM1 IND1 Pop1
+# FAM2 IND2 Pop1
+# FAM3 IND3 Pop2

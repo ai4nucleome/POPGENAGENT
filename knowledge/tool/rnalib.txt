@@ -1,0 +1,118 @@
+Transcriptome Annotation Comparison (Gencode vs Chess) using rnalib must include:Step1: Set test data directory. Description: Define the global test data path for rnalib by monkey-patching `rna.__RNALIB_TESTDATA__`. Generate necessary resources if missing by calling `rna.testdata.create_testdata`. Python code snippet:
+
+cat << 'EOF' > setup_testdata.py
+import rnalib as rna
+rna.__RNALIB_TESTDATA__ = "rnalib_testdata/"
+rna.testdata.create_testdata(rna.__RNALIB_TESTDATA__, (rna.testdata.test_resources, rna.testdata.large_test_resources))
+EOF
+
+Step2: Load transcriptome data. Description: Instantiate `rna.Transcriptome` objects for Gencode and Chess annotations using canonical GRCh38 chromosomes and gene-type filtering ('protein_coding'). Use latest gene symbols via `gene_name_alias_file`. Example code:
+
+cat << 'EOF' > load_transcriptomes.py
+import rnalib as rna
+alias_txt = rna.get_resource("gene_aliases")
+gencode_gff = rna.get_resource("full_gencode_gff")
+chess_gff = rna.get_resource("full_chess_gtf")
+
+txfilter = rna.TranscriptFilter(). \
+    include_gene_types({'protein_coding'}). \
+    include_chromosomes(rna.CANONICAL_CHROMOSOMES['GRCh38'])
+
+t_gc = rna.Transcriptome(
+    annotation_gff=gencode_gff,
+    annotation_flavour='gencode',
+    copied_fields=['gene_type', 'transcript_type'],
+    gene_name_alias_file=alias_txt,
+    feature_filter=txfilter)
+
+t_ch = rna.Transcriptome(
+    annotation_gff=chess_gff,
+    annotation_flavour='chess',
+    copied_fields=['gene_type'],
+    gene_name_alias_file=alias_txt,
+    feature_filter=txfilter)
+EOF
+
+Step3: Perform annotation comparison. Description: Use `rna.cmp_sets` to identify shared and unique genes. Example snippet:
+
+cat << 'EOF' > compare_annotations.py
+import rnalib as rna
+shared, uniq_gc, uniq_ch = rna.cmp_sets({x.gene_name for x in t_gc.genes}, {x.gene_name for x in t_ch.genes})
+EOF
+
+Step4: Detailed gene coordinate comparison. Description: Utilize `rna.AnnotationIterator` to systematically identify differences in gene coordinates and names. Compute histograms for differences in start/end coordinates and visualize using matplotlib. Example code:
+
+cat << 'EOF' > detailed_comparison.py
+import rnalib as rna
+from collections import Counter
+import matplotlib.pyplot as plt
+
+stats, hist_start, hist_end = Counter(), Counter(), Counter()
+with rna.AnnotationIterator(
+    rna.TranscriptomeIterator(t_gc, feature_types='gene'),
+    rna.TranscriptomeIterator(t_ch, feature_types='gene')) as it:
+    for gene_gc, dat in it:
+        # coordinate comparison logic
+        pass  # full implementation omitted for brevity
+EOF
+
+Tools Used: rnalib package, Python, matplotlib
+
+---
+
+miRNA Annotation Comparison (MirGeneDB vs FlyBase) using rnalib must include:Step1: Load transcriptome data from MirGeneDB and FlyBase. Description: Instantiate transcriptomes for MirGeneDB and FlyBase annotations. Example snippet:
+
+cat << 'EOF' > load_mirna_transcriptomes.py
+import rnalib as rna
+
+t_mg = rna.Transcriptome(
+    annotation_gff=rna.get_resource("mirgendb_dme_gff"),
+    annotation_flavour='mirgenedb')
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    res = {"flybase_full": {
+        "uri": "https://ftp.flybase.net/releases/FB2023_06/dmel_r6.55/gtf/dmel-all-r6.55.gtf.gz",
+        "filename": "dmel-all-r6.55.gtf.gz"}}
+    rna.testdata.create_testdata(tmpdir, res)
+    t_fb = rna.Transcriptome(
+        annotation_gff=rna.get_resource("flybase_full", tmpdir, res),
+        annotation_flavour='flybase')
+EOF
+
+Step2: Exact and overlap-based annotation mapping. Description: Map MirGeneDB and FlyBase annotations based on exact location and overlap using rnalib iterators. Example code snippet:
+
+cat << 'EOF' > mirna_annotation_mapping.py
+import rnalib as rna
+
+# Exact mapping
+mapping_exact = {name: t_mg_mir.get(mir, None) for mir, name in t_fb_mir.items()}
+
+# Overlap mapping
+mapping_overlap = {}
+with rna.it(rna.it(t_fb_mir), anno_its=rna.it(t_mg_mir)) as it:
+    for loc, (fb_mir, mg_mir) in it:
+        mapping_overlap[fb_mir] = [x.data for x in mg_mir]
+EOF
+
+Step3: Visualize annotations with IGV browser. Description: Export selected annotations to BED format and display in IGV browser. Example snippet:
+
+cat << 'EOF' > igv_browser_display.py
+import rnalib as rna
+import tempfile, igv_notebook
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    bed_file = f"{tmpdir}/annotations.bed"
+    with open(bed_file, 'wt') as out:
+        rna.it({
+            'hpRNA:CR46343': t_fb['hpRNA:CR46343'],
+            'gene_Dme-Mir-997_3p*': t_mg['gene_Dme-Mir-997_3p*'],
+            'gene_Dme-Mir-997_5p': t_mg['gene_Dme-Mir-997_5p']
+        }).to_bed(out)
+    igv_notebook.init()
+    browser = igv_notebook.Browser({
+        "genome": "dm6",
+        "tracks": [{"name": "BED", "url": bed_file, "format": "bed"}]
+    }).search('hpRNA:CR46343')
+EOF
+
+Tools Used: rnalib, Python, IGV Browser (igv_notebook)

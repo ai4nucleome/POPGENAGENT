@@ -1,0 +1,8 @@
+spaceranger:spaceranger is a set of analysis pipelines that process 10x Genomics Visium data with brightfield or fluorescence microscope images, allowing users to map the whole transcriptome in a variety of tissues. This tool has been installed,just use spaceranger command dierectly,do not download spaceranger repeatly.e.g., spaceranger count --id=Visium_FFPE_Mouse_Brain_RUN1 
+--create-bam=false 
+ --transcriptome=/path/to/refdata-gex-mm10-2020-A 
+—-probe-set=/path/to/adult_mouse_brain_FFPE/Visium_FFPE_Mouse_Brain_probe_set.csv 
+ --fastqs=/path/to/adult_mouse_brain_FFPE/Visium_FFPE_Mouse_Brain_fastqs 
+--image=/path/to/adult_mouse_brain_FFPE/Visium_FFPE_Mouse_Brain_image.jpg 
+--slide=V11J26-127 
+--area=B1

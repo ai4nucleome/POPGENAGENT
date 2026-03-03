@@ -1,0 +1,41 @@
+PopLDdecay - Fast LD Decay Calculation and Visualization
+=========================================================
+
+PopLDdecay calculates pairwise linkage disequilibrium and LD decay patterns.
+Much faster than PLINK for LD decay analysis.
+
+## Installation
+conda install -c bioconda popldecay
+# Or compile from source: https://github.com/BGI-shenzhen/PopLDdecay
+
+## Usage
+
+### Basic LD Decay
+PopLDdecay -InVCF input.vcf.gz -OutStat output_ld -MaxDist 500 -MAF 0.05
+
+### Per-Population LD Decay
+# Create subpopulation file (format: sample\tpop)
+PopLDdecay -InVCF input.vcf.gz -SubPop pop1_samples.txt -OutStat pop1_ld -MaxDist 500
+PopLDdecay -InVCF input.vcf.gz -SubPop pop2_samples.txt -OutStat pop2_ld -MaxDist 500
+
+### Plot LD Decay
+# Single population
+perl Plot_OnePop.pl -inFile output_ld.stat.gz -output ld_decay_plot
+
+# Multiple populations comparison
+perl Plot_MultiPop.pl -inList pop_list.txt -output multi_pop_ld
+# pop_list.txt format (tab-separated):
+# pop1_ld.stat.gz    Pop1
+# pop2_ld.stat.gz    Pop2
+
+## Key Parameters
+-InVCF        Input VCF file (gzipped supported)
+-OutStat      Output prefix
+-MaxDist      Maximum distance in kb (default: 300)
+-MAF          Minimum allele frequency (default: 0.05)
+-Miss         Maximum missing rate (default: 0.25)
+-SubPop       Subpopulation sample list file
+-Het          Maximum heterozygosity (default: 1)
+
+## Output
+- .stat.gz: LD statistics per distance bin (columns: Dist, mean_r2, mean_D', N_pairs)

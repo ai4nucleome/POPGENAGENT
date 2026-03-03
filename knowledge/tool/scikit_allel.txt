@@ -1,0 +1,83 @@
+scikit-allel - Population Genetics in Python
+============================================
+
+Python library for exploratory analysis of large-scale genetic variation data.
+
+## Installation
+pip install scikit-allel
+conda install -c conda-forge scikit-allel
+
+## Loading Data
+```python
+import allel
+import numpy as np
+
+# From VCF
+callset = allel.read_vcf('input.vcf.gz', fields='*')
+gt = allel.GenotypeArray(callset['calldata/GT'])
+pos = callset['variants/POS']
+chrom = callset['variants/CHROM']
+
+# From HDF5 (faster for large datasets)
+callset = allel.read_vcf('input.vcf.gz', fields='*')
+allel.vcf_to_hdf5('input.vcf.gz', 'data.h5', fields='*')
+```
+
+## Population Genetics Statistics
+
+### Allele Counts and Frequencies
+```python
+ac = gt.count_alleles()
+af = ac.to_frequencies()
+
+# Per-population
+pop1_idx = [0, 1, 2, 3, 4]
+pop2_idx = [5, 6, 7, 8, 9]
+ac1 = gt.count_alleles(subpop=pop1_idx)
+ac2 = gt.count_alleles(subpop=pop2_idx)
+```
+
+### Nucleotide Diversity (pi)
+```python
+pi = allel.sequence_diversity(pos, ac)  # Genome-wide
+pi_win, windows, n_bases, counts = allel.windowed_diversity(pos, ac, size=10000)
+```
+
+### Tajima's D
+```python
+D, windows, counts = allel.windowed_tajima_d(pos, ac, size=10000)
+```
+
+### FST (Hudson)
+```python
+fst = allel.average_hudson_fst(ac1, ac2, blen=10000)
+fst_per_snp, se, _, _ = allel.hudson_fst(ac1, ac2)
+fst_win, windows, counts = allel.windowed_hudson_fst(pos, ac1, ac2, size=50000, step=25000)
+```
+
+### PCA
+```python
+# Filter for biallelic, polymorphic, no missing
+flt = ac.is_segregating() & (ac.max_allele() == 1)
+gn = gt.compress(flt, axis=0).to_n_alt()
+coords, model = allel.pca(gn, n_components=10, scaler='patterson')
+```
+
+### LD
+```python
+r = allel.rogers_huff_r(gn[:1000])  # Pairwise r for first 1000 SNPs
+r2 = r ** 2
+```
+
+### iHS (selection)
+```python
+# Requires phased haplotypes
+h = gt.to_haplotypes()
+ihs = allel.ihs(h, pos, use_threads=True)
+```
+
+### Patterson's D (ABBA-BABA)
+```python
+d, se, z = allel.patterson_d(ac1, ac2, ac3, ac4)
+# Significant if |z| > 3
+```

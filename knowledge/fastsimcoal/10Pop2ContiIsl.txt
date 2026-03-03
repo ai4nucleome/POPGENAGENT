@@ -1,0 +1,1 @@
+./fsc28 -t ./output/000/ana/10Pop2ContiIsl.tpl -n50000 -N50000 -d -e ./output/000/ana/10Pop2ContiIsl.est -M 0.001 - l10 -L 30 -q

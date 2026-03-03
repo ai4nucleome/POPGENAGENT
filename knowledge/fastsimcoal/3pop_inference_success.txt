@@ -1,0 +1,33 @@
+# Generated from output 019
+# Successfully validated - runs without errors
+# Mode: Inference
+# Populations: 3 (ESN, CLM, CEU)
+# obs file: 3PopExpBot20Mb_DSFS.obs
+
+Three-population inference model for ESN, CLM, and CEU populations with migration. This model successfully estimates parameters from observed data using fastsimcoal2 inference mode.
+
+Key features:
+- 3 populations with migration matrix
+- 2 historical events (sequential coalescence to ancestral population)
+- Non-overlapping time parameters to avoid conflicts
+- No complex parameters to avoid parsing errors
+- Parameter naming avoids subset conflicts (ANC0, ANC12 instead of NANC, NANC12)
+
+Successful Script:
+#!/bin/bash
+set -e  # Exit on error
+
+# ---- Copy obs to current directory ----
+cp -f ./data/3PopExpBot20Mb_DSFS.obs ./3PopExpBot20Mb_DSFS.obs
+
+# ---- Run fastsimcoal ----
+./fsc28 -t ./output/019/ana/3PopExpBot20Mb.tpl \
+        -e ./output/019/ana/3PopExpBot20Mb.est \
+        -d -u -M -n100000 -L40 -c12 -q --seed 12345
+
+# ---- Clean up temporary obs ----
+rm -f ./3PopExpBot20Mb_DSFS.obs
+
+# ---- Move output files ----
+mkdir -p ./output/019/ana
+mv -f 3PopExpBot20Mb* ./output/019/ana/

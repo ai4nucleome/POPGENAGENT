@@ -1,0 +1,69 @@
+To install this package run one of the following:
+conda install -c bioconda bedtools
+
+BEDTools: BEDTools is a powerful suite of utilities for comparing, manipulating, and analyzing genomic intervals in the popular BED, GFF, and VCF formats. It is widely used for a variety of tasks including interval manipulation, intersection analysis, and genomic file format conversion. BEDTools supports many types of genomic file formats, allowing users to easily perform complex analyses on genomic data.
+
+### Supported Operations:
+- **Intersect**: Find common regions between multiple files.
+- **Merge**: Combine overlapping or adjacent intervals into a single interval.
+- **Closest**: Find the closest feature from a set of intervals.
+- **Subtract**: Subtract one set of intervals from another.
+- **Shuffle**: Randomly shuffle intervals while preserving their length.
+- **Map**: Map a set of intervals to another file to extract values.
+- **Split**: Split intervals into smaller chunks based on specific criteria.
+
+### Dependencies:
+- Python (>=3.6)
+- GCC (>=5.4.0)
+- CMake (>=3.10.2)
+
+### Installation & Setup:
+```bash
+# Install BEDTools using conda
+conda install -c bioconda bedtools
+```
+
+### Usage:
+#### **Intersecting two BED files**
+```bash
+bedtools intersect -a file1.bed -b file2.bed > output.bed
+```
+
+#### **Merging overlapping intervals**
+```bash
+bedtools merge -i input.bed > merged.bed
+```
+
+#### **Find the closest feature**
+```bash
+bedtools closest -a file1.bed -b file2.bed > closest.bed
+```
+
+#### **Subtract one set of intervals from another**
+```bash
+bedtools subtract -a file1.bed -b file2.bed > result.bed
+```
+
+#### **Shuffle intervals randomly**
+```bash
+bedtools shuffle -i input.bed -g genome.txt > shuffled.bed
+```
+
+#### **Map intervals to another file**
+```bash
+bedtools map -a input.bed -b values.bed > mapped.bed
+```
+
+### **Advanced Features:**
+- **Multi-threading support**: BEDTools allows parallel processing for large genomic datasets.
+- **Custom genome definitions**: Users can specify custom genome definitions for operations like shuffling or calculating closest distances.
+
+### **Output Files:**
+- **output.bed**: The resulting file after performing an operation, typically in BED format.
+- **merged.bed**: The output file containing merged intervals from the input file.
+
+### **Reference Documentation:**
+For more details, refer to the official BEDTools documentation and command-line help:
+```bash
+bedtools --help
+```

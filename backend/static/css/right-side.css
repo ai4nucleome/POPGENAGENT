@@ -1,0 +1,170 @@
+.input-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-bottom: 20px;
+    
+}
+.input-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.input-group textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+    flex-grow: 1;
+    font-size: 16px;
+    background: #CED3E0;
+}
+.dialog-agent {
+    flex-grow: 6;
+}
+
+.right-side-container {
+    flex: 1;
+    border: 2px dashed #ccc;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 4;
+}
+.target-dialog {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+.data-path {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 5;
+}
+.button-container {
+    background-color: #f4f7f6;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Inner shadow */
+    display: flex;
+    justify-content: space-between;
+}
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.buttons-left {
+    display: flex;
+    justify-content: flex-start;
+}
+.buttons-left button {
+    margin-right: 10px; /* Increase spacing between buttons */
+}
+.buttons button {
+    padding: 12px 20px; /* Increase padding */
+    background: linear-gradient(90deg, #4a90e2 0%, #007bff 100%);
+    color: white;
+    border: none;
+    border-radius: 8px; /* Rounded button */
+    cursor: pointer;
+    font-size: 16px; /* Increase font size */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Add transition effect */
+}
+.buttons button:last-child {
+    margin-right: 0;
+}
+.buttons button:hover {
+    background-color: #357abd;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add shadow effect */
+}
+
+
+.select-container {
+    margin-bottom: 20px;
+}
+.select-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.select-container select {
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-width: 200px;
+}
+.loading-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    border-top: 2px solid #007bff;
+    border-bottom: 2px solid #007bff;
+    height: 5%; /* Increase height to leave more space */
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f1f1f1;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.loading-text {
+    display: flex;
+    align-items: center;
+}
+.loading-text h2 {
+    margin: 0;
+}
+.dots {
+    display: inline-block;
+    width: 1em;
+    overflow: hidden;
+    vertical-align: bottom;
+    animation: ellipsis 1.5s steps(4, end) infinite;
+}
+@keyframes ellipsis {
+    0% { width: 1em; }
+    25% { width: 2em; }
+    50% { width: 3em; }
+    75% { width: 4em; }
+    100% { width: 1em; }
+}
+.delete-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.delete-button:hover {
+    background-color: #c0392b;
+}
+
+
+
+
+
+

@@ -1,0 +1,459 @@
+{
+    "step_number": "VISUALIZATION",
+    "description": "Generate publication-quality ADMIXTURE visualizations with proper cluster alignment across K values. This ensures consistent color assignment for ancestral components, making it easier to interpret and compare results across different K values.",
+    "input_filename": [
+        "./output/{ID}/ld_pruned1.fam: sample information file",
+        "./output/{ID}/admixture_k{K}.Q: ADMIXTURE Q files for K=2 to K=12",
+        "./output/{ID}/cv_errors.txt: cross-validation errors"
+    ],
+    "output_filename": [
+        "./output/{ID}/admixture_aligned_panel.png: aligned multi-K panel plot",
+        "./output/{ID}/admixture_aligned_k{K}.png: individual K plots with consistent colors",
+        "./output/{ID}/admixture_cv_error.png: CV error plot"
+    ],
+    "tools": "Python (matplotlib, numpy, pandas, scipy)"
+}
+
+cat << 'EOF' > ./output/{ID}/visualize_admixture_aligned.py
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+ADMIXTURE Panel Visualization with Cluster Alignment
+=====================================================
+Generate publication-quality ADMIXTURE visualization charts following population genetics standards
+- Automatically align ancestral component colors across different K values
+- Support multi-K panel plots
+- Publication-quality output
+"""
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+import numpy as np
+import os
+from scipy.optimize import linear_sum_assignment
+from scipy.stats import pearsonr
+import warnings
+warnings.filterwarnings('ignore')
+
+# ============================================================================
+# CONFIGURATION - Modify paths according to your setup
+# ============================================================================
+WORKING_DIR = './output/{ID}/'
+FAM_FILE = './output/{ID}/ld_pruned1.fam'
+K_RANGE = range(2, 13)
+
+# Population definitions (1000 Genomes Project)
+CONTINENTAL_GROUPS = {
+    'African': ['LWK', 'ESN', 'YRI', 'MSL', 'GWD', 'ACB', 'ASW'],
+    'European': ['CEU', 'TSI', 'FIN', 'GBR', 'IBS'],
+    'South Asian': ['GIH', 'PJL', 'BEB', 'STU', 'ITU'],
+    'East Asian': ['CHB', 'JPT', 'CHS', 'CDX', 'KHV'],
+    'American': ['MXL', 'PUR', 'CLM', 'PEL']
+}
+
+POPULATIONS_ORDERED = []
+for pops in CONTINENTAL_GROUPS.values():
+    POPULATIONS_ORDERED.extend(pops)
+
+# ============================================================================
+# Global style settings - Publication quality
+# ============================================================================
+matplotlib.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'DejaVu Sans']
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['axes.unicode_minus'] = False
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
+TITLE_SIZE = 18
+LABEL_SIZE = 14
+TICK_SIZE = 10
+K_LABEL_SIZE = 14
+DPI = 300
+FIGURE_WIDTH = 18
+
+# Color scheme - High saturation, high contrast
+ADMIXTURE_COLORS = [
+    '#FFFF00',  # 1 - Bright yellow
+    '#FF0000',  # 2 - Red
+    '#0000FF',  # 3 - Blue
+    '#00FFFF',  # 4 - Cyan
+    '#FFA500',  # 5 - Orange
+    '#00FF00',  # 6 - Green
+    '#800080',  # 7 - Purple
+    '#FF00FF',  # 8 - Magenta
+    '#00CED1',  # 9 - Dark cyan
+    '#32CD32',  # 10 - Lime green
+    '#DC143C',  # 11 - Crimson
+    '#4169E1',  # 12 - Royal blue
+]
+
+
+class AdmixtureAligner:
+    """ADMIXTURE result aligner - Implements precise ancestral component color alignment"""
+    
+    def __init__(self, fam_file=None):
+        self.q_data = {}
+        self.aligned_q = {}
+        self.column_order = {}
+        self.fam_data = None
+        self.pop_means = {}
+        
+        if fam_file and os.path.exists(fam_file):
+            self._load_fam_file(fam_file)
+    
+    def _load_fam_file(self, fam_file):
+        """Load FAM file"""
+        self.fam_data = pd.read_csv(
+            fam_file, sep=r'\s+', header=None,
+            names=['FID', 'IID', 'PAT', 'MAT', 'SEX', 'PHENO']
+        )
+        self.fam_data['Population'] = self.fam_data['FID']
+        self.fam_data['Pop_Order'] = self.fam_data['Population'].apply(
+            lambda x: POPULATIONS_ORDERED.index(x) if x in POPULATIONS_ORDERED else 999
+        )
+        self.fam_data['Original_Index'] = self.fam_data.index
+        self.fam_data = self.fam_data.sort_values('Pop_Order').reset_index(drop=True)
+        print(f'Loaded {len(self.fam_data)} samples, {self.fam_data["Population"].nunique()} populations')
+    
+    def load_q_file(self, k, q_file):
+        """Load Q file"""
+        if not os.path.exists(q_file):
+            print(f'Warning: Q file not found - {q_file}')
+            return False
+        
+        q_matrix = pd.read_csv(q_file, sep=r'\s+', header=None).values
+        
+        if self.fam_data is not None:
+            sorted_indices = self.fam_data['Original_Index'].values
+            q_matrix = q_matrix[sorted_indices]
+        
+        self.q_data[k] = q_matrix
+        
+        if self.fam_data is not None:
+            self._compute_pop_means(k)
+        
+        return True
+    
+    def _compute_pop_means(self, k):
+        """Compute mean of each population across ancestral components"""
+        q_matrix = self.q_data[k]
+        pop_means = {}
+        
+        for pop in POPULATIONS_ORDERED:
+            if pop in self.fam_data['Population'].values:
+                mask = self.fam_data['Population'] == pop
+                pop_means[pop] = q_matrix[mask].mean(axis=0)
+        
+        self.pop_means[k] = pop_means
+    
+    def load_all_q_files(self, k_range, q_dir, file_pattern='admixture_k{k}.Q'):
+        """Load Q files for multiple K values"""
+        for k in k_range:
+            q_file = os.path.join(q_dir, file_pattern.format(k=k))
+            self.load_q_file(k, q_file)
+        
+        if self.q_data:
+            print(f'Loaded Q matrices for K={min(self.q_data.keys())}-{max(self.q_data.keys())}')
+    
+    def _compute_similarity_matrix(self, q1, q2):
+        """Compute similarity matrix between columns of two Q matrices"""
+        k1, k2 = q1.shape[1], q2.shape[1]
+        similarity = np.zeros((k1, k2))
+        
+        for i in range(k1):
+            for j in range(k2):
+                corr, _ = pearsonr(q1[:, i], q2[:, j])
+                if np.isnan(corr):
+                    corr = 0
+                
+                dot_product = np.dot(q1[:, i], q2[:, j])
+                norm_product = np.linalg.norm(q1[:, i]) * np.linalg.norm(q2[:, j])
+                cosine = dot_product / norm_product if norm_product > 0 else 0
+                
+                similarity[i, j] = 0.6 * corr + 0.4 * cosine
+        
+        return similarity
+    
+    def align_clusters_progressive(self):
+        """Progressive alignment: align from K to K+1 sequentially"""
+        k_values = sorted(self.q_data.keys())
+        
+        if not k_values:
+            print('Error: No Q files loaded')
+            return
+        
+        print(f'\nStarting progressive ancestral component alignment...')
+        
+        min_k = min(k_values)
+        initial_order = self._determine_initial_order(min_k)
+        self.column_order[min_k] = initial_order
+        self.aligned_q[min_k] = self.q_data[min_k][:, initial_order]
+        
+        print(f'  K={min_k}: Initial order = {initial_order}')
+        
+        for k in k_values[1:]:
+            prev_k = k - 1
+            if prev_k not in self.aligned_q:
+                prev_ks = [kv for kv in k_values if kv < k and kv in self.aligned_q]
+                if prev_ks:
+                    prev_k = max(prev_ks)
+                else:
+                    continue
+            
+            q_prev = self.aligned_q[prev_k]
+            q_curr = self.q_data[k]
+            
+            similarity = self._compute_similarity_matrix(q_prev, q_curr)
+            cost_matrix = -similarity
+            
+            if k > prev_k:
+                padded_cost = np.zeros((k, k))
+                padded_cost[:prev_k, :] = cost_matrix
+            else:
+                padded_cost = cost_matrix
+            
+            row_ind, col_ind = linear_sum_assignment(padded_cost)
+            
+            new_order = list(col_ind[:prev_k])
+            remaining_cols = [c for c in range(k) if c not in new_order]
+            new_order.extend(remaining_cols)
+            
+            self.column_order[k] = new_order
+            self.aligned_q[k] = q_curr[:, new_order]
+            
+            print(f'  K={k}: Column order = {new_order}')
+        
+        print('Alignment complete!')
+    
+    def _determine_initial_order(self, k):
+        """Determine component order for initial K value"""
+        if k not in self.pop_means:
+            return list(range(k))
+        
+        continent_reps = {
+            'African': ['YRI', 'LWK', 'ESN'],
+            'European': ['CEU', 'GBR', 'TSI'],
+            'East Asian': ['CHB', 'JPT', 'CHS'],
+            'South Asian': ['GIH', 'PJL', 'BEB'],
+            'American': ['MXL', 'PEL', 'CLM']
+        }
+        
+        component_continent_scores = np.zeros((k, len(continent_reps)))
+        
+        for j, (continent, reps) in enumerate(continent_reps.items()):
+            for pop in reps:
+                if pop in self.pop_means[k]:
+                    component_continent_scores[:, j] += self.pop_means[k][pop]
+        
+        dominant_continent = np.argmax(component_continent_scores, axis=1)
+        priority = {0: 0, 1: 1, 3: 2, 2: 3, 4: 4}
+        
+        order = sorted(range(k), key=lambda x: (
+            priority.get(dominant_continent[x], 99),
+            -component_continent_scores[x, dominant_continent[x]]
+        ))
+        
+        return order
+    
+    def get_aligned_q(self, k):
+        """Get aligned Q matrix"""
+        if k in self.aligned_q:
+            return self.aligned_q[k]
+        return self.q_data.get(k)
+    
+    def get_colors(self, k):
+        """Get color list for given K value"""
+        return ADMIXTURE_COLORS[:k]
+
+
+class AdmixtureVisualizer:
+    """ADMIXTURE visualizer - Generates publication-quality charts"""
+    
+    def __init__(self, aligner, fam_data=None):
+        self.aligner = aligner
+        self.fam_data = fam_data if fam_data is not None else aligner.fam_data
+        
+        if self.fam_data is not None:
+            self._compute_population_info()
+    
+    def _compute_population_info(self):
+        """Precompute population position information"""
+        self.pop_counts = self.fam_data.groupby('Population', sort=False).size()
+        
+        self.pop_positions = []
+        self.pop_boundaries = [0]
+        current_pos = 0
+        
+        for pop in POPULATIONS_ORDERED:
+            if pop in self.pop_counts.index:
+                count = self.pop_counts[pop]
+                self.pop_positions.append((pop, current_pos + count/2))
+                current_pos += count
+                self.pop_boundaries.append(current_pos)
+        
+        self.continent_ranges = {}
+        current_pos = 0
+        for continent, pops in CONTINENTAL_GROUPS.items():
+            start = current_pos
+            for pop in pops:
+                if pop in self.pop_counts.index:
+                    current_pos += self.pop_counts[pop]
+            self.continent_ranges[continent] = (start, current_pos)
+    
+    def plot_panel(self, k_values, save_path):
+        """Plot multi-K panel figure"""
+        n_panels = len(k_values)
+        panel_height = 1.5
+        total_height = panel_height * n_panels + 2.0
+        
+        fig, axes = plt.subplots(n_panels, 1, figsize=(FIGURE_WIDTH, total_height), sharex=True)
+        
+        if n_panels == 1:
+            axes = [axes]
+        
+        n_samples = len(self.fam_data)
+        
+        for idx, k in enumerate(k_values):
+            ax = axes[idx]
+            is_last = (idx == n_panels - 1)
+            
+            q_matrix = self.aligner.get_aligned_q(k)
+            if q_matrix is None:
+                ax.text(0.5, 0.5, f'K={k} data not available', ha='center', va='center', transform=ax.transAxes)
+                continue
+            
+            colors = self.aligner.get_colors(k)
+            x = np.arange(n_samples)
+            bar_width = 1.0
+            
+            bottom = np.zeros(n_samples)
+            for i in range(k):
+                ax.bar(x, q_matrix[:, i], bar_width, bottom=bottom,
+                       color=colors[i], edgecolor='none', linewidth=0)
+                bottom += q_matrix[:, i]
+            
+            # Population separator lines
+            for boundary in self.pop_boundaries[1:-1]:
+                ax.axvline(x=boundary - 0.5, color='black', linewidth=0.3, alpha=0.8)
+            
+            # Continental separator lines
+            for continent, (start, end) in self.continent_ranges.items():
+                if end < n_samples:
+                    ax.axvline(x=end - 0.5, color='black', linewidth=1.2, alpha=1.0)
+            
+            ax.set_xlim(-0.5, n_samples - 0.5)
+            ax.set_ylim(0, 1)
+            ax.set_ylabel(f'K={k}', fontsize=K_LABEL_SIZE, fontweight='bold',
+                          rotation=0, labelpad=30, va='center')
+            ax.set_yticks([])
+            
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['left'].set_visible(False)
+            ax.spines['bottom'].set_visible(not is_last)
+            
+            if is_last:
+                ax.set_xticks([pos for _, pos in self.pop_positions])
+                ax.set_xticklabels([pop for pop, _ in self.pop_positions],
+                                  rotation=90, ha='center', fontsize=8, fontweight='bold')
+                ax.spines['bottom'].set_visible(True)
+            else:
+                ax.set_xticks([])
+        
+        plt.subplots_adjust(hspace=0.02, top=0.96, bottom=0.10, left=0.05, right=0.98)
+        
+        fig.savefig(save_path, dpi=DPI, bbox_inches='tight', facecolor='white')
+        print(f'Saved: {save_path}')
+        
+        pdf_path = save_path.replace('.png', '.pdf')
+        fig.savefig(pdf_path, dpi=DPI, bbox_inches='tight', facecolor='white')
+        print(f'Saved: {pdf_path}')
+        
+        plt.close(fig)
+
+
+def plot_cv_error(cv_file, output_file):
+    """Plot CV error figure"""
+    cv_data = []
+    with open(cv_file, 'r') as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) >= 2:
+                try:
+                    k = int(parts[0])
+                    cv = float(parts[1])
+                    cv_data.append((k, cv))
+                except:
+                    continue
+    
+    if not cv_data:
+        print('No CV data found')
+        return
+    
+    cv_data.sort(key=lambda x: x[0])
+    k_values = [x[0] for x in cv_data]
+    cv_errors = [x[1] for x in cv_data]
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(k_values, cv_errors, 'b-o', linewidth=2, markersize=10,
+            markerfacecolor='white', markeredgewidth=2)
+    
+    min_idx = np.argmin(cv_errors)
+    optimal_k = k_values[min_idx]
+    min_cv = cv_errors[min_idx]
+    
+    ax.plot(optimal_k, min_cv, 'ro', markersize=15, zorder=5)
+    ax.annotate(f'Optimal K={optimal_k}\nCV={min_cv:.4f}',
+                xy=(optimal_k, min_cv), xytext=(optimal_k + 0.5, min_cv + 0.005),
+                arrowprops=dict(arrowstyle='->', color='red', lw=2),
+                fontsize=12, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.8))
+    
+    ax.set_xlabel('K (Number of Ancestral Populations)', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Cross-Validation Error', fontsize=14, fontweight='bold')
+    ax.set_title('ADMIXTURE Cross-Validation Error', fontsize=18, fontweight='bold')
+    ax.set_xticks(k_values)
+    ax.grid(True, alpha=0.3, linestyle='--')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    plt.tight_layout()
+    plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(f'Saved: {output_file}')
+
+
+def main():
+    """Main function"""
+    print('=' * 70)
+    print('ADMIXTURE Aligned Visualization')
+    print('=' * 70)
+    
+    # Create aligner
+    aligner = AdmixtureAligner(FAM_FILE)
+    
+    # Load all Q files
+    aligner.load_all_q_files(K_RANGE, WORKING_DIR)
+    
+    # Execute progressive alignment
+    aligner.align_clusters_progressive()
+    
+    # Create visualizer
+    visualizer = AdmixtureVisualizer(aligner)
+    
+    # Generate panel plot
+    print('\nGenerating panel plot...')
+    visualizer.plot_panel(list(range(2, 10)), f'{WORKING_DIR}admixture_aligned_panel.png')
+    
+    # Generate CV error plot
+    print('\nGenerating CV error plot...')
+    plot_cv_error(f'{WORKING_DIR}cv_errors.txt', f'{WORKING_DIR}admixture_cv_error.png')
+    
+    print('\nVisualization complete!')
+
+
+if __name__ == '__main__':
+    main()
+EOF
+python ./output/{ID}/visualize_admixture_aligned.py
